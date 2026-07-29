@@ -1,9 +1,22 @@
-function App() {
+import AppRoutes from "./routes/AppRoutes";
+
+function App(){
+
   return (
-    <div>
-      <h1>Customer360 Platform</h1>
-    </div>
+    <AppRoutes />
   );
+
 }
 
 export default App;
+
+
+// function App() {
+//   return (
+//     <div className="w-64 bg-gray-900 text-white min-h-screen p-6">
+//       Tailwind Testing
+//     </div>
+//   );
+// }
+
+// export default App;

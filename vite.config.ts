@@ -9,3 +9,5 @@ export default defineConfig({
     tailwindcss(),
   ],
 })
+
+// import DOES_NOT_EXIST from "abc";
