@@ -1,47 +1,64 @@
-import { Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
+export default function Sidebar() {
+  console.log("SIDEBAR COMPONENT IS RENDERING");
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
-function Sidebar(){
+  function handleLogout() {
+    logout();
+    navigate("/login", { replace: true });
+  }
 
-    return (
+  return (
+    <aside
+      style={{
+        width: "256px",
+        minHeight: "100vh",
+        backgroundColor: "#0f172a",
+        color: "white",
+        padding: "24px",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <h1 style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "30px" }}>
+        Customer360
+      </h1>
 
-        <aside className="w-64 bg-gray-900 text-white min-h-screen p-6">
+      <nav style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <NavLink to="/dashboard" style={{ color: "white" }}>
+          Dashboard
+        </NavLink>
 
+        <NavLink to="/customers" style={{ color: "white" }}>
+          Customers
+        </NavLink>
 
-            <h1 className="text-xl font-bold mb-8">
-                Customer360
-            </h1>
+        <NavLink to="/settings" style={{ color: "white" }}>
+          Settings
+        </NavLink>
 
-
-            <nav>
-                <Link
-                    to="/"
-                    className="block mb-3 hover:text-blue-400"
-                >
-                    Dashboard
-                </Link>
-
-                <Link
-                    to="/customers"
-                    className="block mb-3 hover:text-blue-400"
-                >
-                    Customers
-                </Link>
-
-                <Link
-                    to="/settings"
-                    className="block hover:text-blue-400"
-                >
-                    Settings
-                </Link>
-            </nav>
-
-
-        </aside>
-
-    );
-
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{
+            marginTop: "8px",
+            width: "100%",
+            padding: "12px",
+            backgroundColor: "#dc2626",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            textAlign: "left",
+            fontWeight: "bold",
+          }}
+        >
+          Logout
+        </button>
+      </nav>
+    </aside>
+  );
 }
-
-
-export default Sidebar;
