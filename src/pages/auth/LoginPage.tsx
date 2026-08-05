@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 interface LoginFormData {
   email: string;
@@ -11,8 +12,12 @@ interface LoginFormErrors {
   password?: string;
 }
 
+const DEMO_EMAIL = "admin@customer360.com";
+const DEMO_PASSWORD = "Password123!";
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -24,6 +29,11 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // A logged-in user should not be able to return to the login page.
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
 
@@ -32,20 +42,23 @@ export default function LoginPage() {
       [name]: value,
     }));
 
-    setFormErrors((currentErrors) => ({
-      ...currentErrors,
-      [name]: undefined,
-    }));
+    if (name === "email" || name === "password") {
+      setFormErrors((currentErrors) => ({
+        ...currentErrors,
+        [name]: undefined,
+      }));
+    }
 
     setLoginError("");
   }
 
-  function validateForm() {
+  function validateForm(): LoginFormErrors {
     const errors: LoginFormErrors = {};
+    const normalizedEmail = formData.email.trim();
 
-    if (!formData.email.trim()) {
+    if (!normalizedEmail) {
       errors.email = "Email address is required.";
-    } else if (!formData.email.includes("@")) {
+    } else if (!normalizedEmail.includes("@")) {
       errors.email = "Enter a valid email address.";
     }
 
@@ -61,60 +74,70 @@ export default function LoginPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const errors = validateForm();
+    const validationErrors = validateForm();
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
       return;
     }
 
-    setIsSubmitting(true);
+    setFormErrors({});
     setLoginError("");
+    setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => {
+      // Simulates a backend request.
+      await new Promise<void>((resolve) => {
         window.setTimeout(resolve, 800);
       });
 
       const normalizedEmail = formData.email.trim().toLowerCase();
 
-      const isValidLogin =
-        normalizedEmail === "admin@customer360.com" &&
-        formData.password === "Password123!";
+      const credentialsAreValid =
+        normalizedEmail === DEMO_EMAIL &&
+        formData.password === DEMO_PASSWORD;
 
-      if (!isValidLogin) {
-        setLoginError("The email address or password is incorrect.");
+      if (!credentialsAreValid) {
+        setLoginError(
+          "The email address or password is incorrect. Please try again.",
+        );
         return;
       }
 
-      sessionStorage.setItem("customer360_authenticated", "true");
+      login();
 
       navigate("/dashboard", {
         replace: true,
       });
     } catch {
-      setLoginError("Something went wrong. Please try again.");
+      setLoginError(
+        "We could not sign you in. Please try again in a few moments.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  function handlePasswordVisibility() {
+    setShowPassword((currentValue) => !currentValue);
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-        <div className="mb-8">
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12">
+      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
+        <header className="mb-8">
           <p className="text-sm font-semibold text-blue-700">
             Customer360 Platform
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-slate-950">
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
             Sign in
           </h1>
 
-          <p className="mt-2 text-sm text-slate-600">
-            Enter your account details to continue.
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Enter your account details to continue to the dashboard.
           </p>
-        </div>
+        </header>
 
         {loginError && (
           <div
@@ -143,8 +166,13 @@ export default function LoginPage() {
                 onChange={handleInputChange}
                 disabled={isSubmitting}
                 autoComplete="email"
+                autoFocus
+                aria-invalid={Boolean(formErrors.email)}
+                aria-describedby={
+                  formErrors.email ? "email-error" : undefined
+                }
                 placeholder="you@company.com"
-                className={`w-full rounded-lg border px-4 py-3 text-sm outline-none transition focus:ring-4 ${
+                className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:bg-slate-100 ${
                   formErrors.email
                     ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                     : "border-slate-300 focus:border-blue-600 focus:ring-blue-100"
@@ -152,14 +180,18 @@ export default function LoginPage() {
               />
 
               {formErrors.email && (
-                <p className="mt-1.5 text-sm text-red-600">
+                <p
+                  id="email-error"
+                  className="mt-1.5 text-sm text-red-600"
+                  role="alert"
+                >
                   {formErrors.email}
                 </p>
               )}
             </div>
 
             <div>
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex items-center justify-between gap-4">
                 <label
                   htmlFor="password"
                   className="block text-sm font-semibold text-slate-700"
@@ -169,8 +201,12 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+                  onClick={handlePasswordVisibility}
+                  disabled={isSubmitting}
+                  className="text-sm font-semibold text-blue-700 transition hover:text-blue-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                  aria-label={
+                    showPassword ? "Hide password" : "Show password"
+                  }
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
@@ -184,8 +220,12 @@ export default function LoginPage() {
                 onChange={handleInputChange}
                 disabled={isSubmitting}
                 autoComplete="current-password"
+                aria-invalid={Boolean(formErrors.password)}
+                aria-describedby={
+                  formErrors.password ? "password-error" : undefined
+                }
                 placeholder="Enter your password"
-                className={`w-full rounded-lg border px-4 py-3 text-sm outline-none transition focus:ring-4 ${
+                className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:bg-slate-100 ${
                   formErrors.password
                     ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                     : "border-slate-300 focus:border-blue-600 focus:ring-blue-100"
@@ -193,7 +233,11 @@ export default function LoginPage() {
               />
 
               {formErrors.password && (
-                <p className="mt-1.5 text-sm text-red-600">
+                <p
+                  id="password-error"
+                  className="mt-1.5 text-sm text-red-600"
+                  role="alert"
+                >
                   {formErrors.password}
                 </p>
               )}
@@ -202,26 +246,32 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-400"
+              className="flex w-full items-center justify-center rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-400"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>
 
-        <div className="mt-8 rounded-lg bg-blue-50 p-4">
+        <aside className="mt-8 rounded-lg border border-blue-100 bg-blue-50 p-4">
           <p className="text-sm font-semibold text-blue-950">
-            Demo login
+            Demo account
           </p>
 
           <p className="mt-2 text-sm text-blue-900">
-            Email: admin@customer360.com
+            Email:{" "}
+            <span className="font-medium">
+              admin@customer360.com
+            </span>
           </p>
 
           <p className="mt-1 text-sm text-blue-900">
-            Password: Password123!
+            Password:{" "}
+            <span className="font-medium">
+              Password123!
+            </span>
           </p>
-        </div>
+        </aside>
       </section>
     </main>
   );

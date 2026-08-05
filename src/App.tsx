@@ -1,28 +1,66 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
-import DashboardPage from "./pages/dashboard/DashboardPage";
 import CustomersPage from "./pages/customer/CustomersPage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
+function RootRedirect() {
+  const isAuthenticated =
+    sessionStorage.getItem("customer360_authenticated") === "true";
+
+  return (
+    <Navigate
+      to={isAuthenticated ? "/dashboard" : "/login"}
+      replace
+    />
+  );
+}
 
 export default function App() {
   return (
     <Routes>
-      {/* Public login page */}
+      <Route path="/" element={<RootRedirect />} />
+
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Opening the application sends the user to login */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* Dashboard application pages */}
-      <Route element={<MainLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/customers" element={<CustomersPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardPage />} />
       </Route>
 
-      {/* Unknown URLs */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route
+        path="/customers"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<CustomersPage />} />
+      </Route>
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<SettingsPage />} />
+      </Route>
+
+      <Route path="*" element={<RootRedirect />} />
     </Routes>
   );
 }
+
+
