@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,15 +14,9 @@ export default function ProtectedRoute({
   const location = useLocation();
 
   const isAuthenticated =
-    sessionStorage.getItem("customer360_authenticated") === "true";
-
-  console.log("PROTECTED ROUTE:", {
-    isAuthenticated,
-    pathname: location.pathname,
-    storageValue: sessionStorage.getItem(
+    sessionStorage.getItem(
       "customer360_authenticated",
-    ),
-  });
+    ) === "true";
 
   if (!isAuthenticated) {
     return (
