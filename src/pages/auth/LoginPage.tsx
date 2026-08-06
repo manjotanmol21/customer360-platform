@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import PasswordInput from "../../components/auth/PasswordInput";
+import Button from "../../components/UI/Button";
+import Card from "../../components/UI/Card";
+import Input from "../../components/UI/Input";
+import Label from "../../components/UI/Label";
 import { useAuth } from "../../context/AuthContext";
 
 interface LoginFormData {
@@ -27,14 +32,14 @@ export default function LoginPage() {
   const [formErrors, setFormErrors] = useState<LoginFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
-  // A logged-in user should not be able to return to the login page.
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleInputChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const { name, value } = event.target;
 
     setFormData((currentFormData) => ({
@@ -71,7 +76,9 @@ export default function LoginPage() {
     return errors;
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     const validationErrors = validateForm();
@@ -86,12 +93,12 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulates a backend request.
       await new Promise<void>((resolve) => {
         window.setTimeout(resolve, 800);
       });
 
-      const normalizedEmail = formData.email.trim().toLowerCase();
+      const normalizedEmail =
+        formData.email.trim().toLowerCase();
 
       const credentialsAreValid =
         normalizedEmail === DEMO_EMAIL &&
@@ -118,13 +125,13 @@ export default function LoginPage() {
     }
   }
 
-  function handlePasswordVisibility() {
-    setShowPassword((currentValue) => !currentValue);
-  }
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12">
-      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
+      <Card
+        padding="large"
+        shadow="medium"
+        className="w-full max-w-md"
+      >
         <header className="mb-8">
           <p className="text-sm font-semibold text-blue-700">
             Customer360 Platform
@@ -151,14 +158,15 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} noValidate>
           <div className="space-y-5">
             <div>
-              <label
+              <Label
                 htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+                required
+                className="mb-2"
               >
                 Email address
-              </label>
+              </Label>
 
-              <input
+              <Input
                 id="email"
                 name="email"
                 type="email"
@@ -167,89 +175,31 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 autoComplete="email"
                 autoFocus
-                aria-invalid={Boolean(formErrors.email)}
-                aria-describedby={
-                  formErrors.email ? "email-error" : undefined
-                }
                 placeholder="you@company.com"
-                className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:bg-slate-100 ${
-                  formErrors.email
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                    : "border-slate-300 focus:border-blue-600 focus:ring-blue-100"
-                }`}
+                error={formErrors.email}
               />
-
-              {formErrors.email && (
-                <p
-                  id="email-error"
-                  className="mt-1.5 text-sm text-red-600"
-                  role="alert"
-                >
-                  {formErrors.email}
-                </p>
-              )}
             </div>
 
-            <div>
-              <div className="mb-2 flex items-center justify-between gap-4">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-semibold text-slate-700"
-                >
-                  Password
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handlePasswordVisibility}
-                  disabled={isSubmitting}
-                  className="text-sm font-semibold text-blue-700 transition hover:text-blue-900 disabled:cursor-not-allowed disabled:text-slate-400"
-                  aria-label={
-                    showPassword ? "Hide password" : "Show password"
-                  }
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-                autoComplete="current-password"
-                aria-invalid={Boolean(formErrors.password)}
-                aria-describedby={
-                  formErrors.password ? "password-error" : undefined
-                }
-                placeholder="Enter your password"
-                className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:bg-slate-100 ${
-                  formErrors.password
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                    : "border-slate-300 focus:border-blue-600 focus:ring-blue-100"
-                }`}
-              />
-
-              {formErrors.password && (
-                <p
-                  id="password-error"
-                  className="mt-1.5 text-sm text-red-600"
-                  role="alert"
-                >
-                  {formErrors.password}
-                </p>
-              )}
-            </div>
-
-            <button
-              type="submit"
+            <PasswordInput
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-blue-400"
+              error={formErrors.password}
+              required
+              autoComplete="current-password"
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              size="large"
+              isLoading={isSubmitting}
+              loadingText="Signing in..."
             >
-              {isSubmitting ? "Signing in..." : "Sign in"}
-            </button>
+              Sign in
+            </Button>
           </div>
         </form>
 
@@ -272,7 +222,7 @@ export default function LoginPage() {
             </span>
           </p>
         </aside>
-      </section>
+      </Card>
     </main>
   );
 }

@@ -17,15 +17,20 @@ interface AuthProviderProps {
 
 const AUTH_STORAGE_KEY = "customer360_authenticated";
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(
+  undefined,
+);
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  console.log("AUTH PROVIDER IS RENDERING");
+export function AuthProvider({
+  children,
+}: AuthProviderProps) {
+  const [isAuthenticated, setIsAuthenticated] =
+    useState<boolean>(() => {
+      return (
+        sessionStorage.getItem(AUTH_STORAGE_KEY) === "true"
+      );
+    });
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem(AUTH_STORAGE_KEY) === "true";
-  });
-  
   function login() {
     sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
     setIsAuthenticated(true);
@@ -53,7 +58,9 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
-    throw new Error("useAuth must be used inside an AuthProvider.");
+    throw new Error(
+      "useAuth must be used inside an AuthProvider.",
+    );
   }
 
   return context;
