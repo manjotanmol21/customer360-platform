@@ -1,128 +1,86 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import PasswordInput from "../../components/auth/PasswordInput";
 import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
 import Input from "../../components/UI/Input";
 import Label from "../../components/UI/Label";
+
 import { useAuth } from "../../context/AuthContext";
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-interface LoginFormErrors {
-  email?: string;
-  password?: string;
-}
+import loginSchema, {
+  type LoginFormValues,
+} from "../../features/auth/schemas/loginSchema";
 
 const DEMO_EMAIL = "admin@customer360.com";
 const DEMO_PASSWORD = "Password123!";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
 
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
+  const {
+    login,
+    isAuthenticated,
+  } = useAuth();
 
-  const [formErrors, setFormErrors] = useState<LoginFormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState("");
 
+  const {
+    register,
+    handleSubmit,
+    formState: {
+      errors,
+      isSubmitting,
+    },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
   }
 
-  function handleInputChange(
-    event: React.ChangeEvent<HTMLInputElement>,
+  async function onSubmit(
+    formData: LoginFormValues,
   ) {
-    const { name, value } = event.target;
-
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      [name]: value,
-    }));
-
-    if (name === "email" || name === "password") {
-      setFormErrors((currentErrors) => ({
-        ...currentErrors,
-        [name]: undefined,
-      }));
-    }
-
     setLoginError("");
-  }
 
-  function validateForm(): LoginFormErrors {
-    const errors: LoginFormErrors = {};
-    const normalizedEmail = formData.email.trim();
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 800);
+    });
 
-    if (!normalizedEmail) {
-      errors.email = "Email address is required.";
-    } else if (!normalizedEmail.includes("@")) {
-      errors.email = "Enter a valid email address.";
-    }
+    const normalizedEmail =
+      formData.email.trim().toLowerCase();
 
-    if (!formData.password) {
-      errors.password = "Password is required.";
-    } else if (formData.password.length < 8) {
-      errors.password = "Password must contain at least 8 characters.";
-    }
+    const credentialsAreValid =
+      normalizedEmail === DEMO_EMAIL &&
+      formData.password === DEMO_PASSWORD;
 
-    return errors;
-  }
+    if (!credentialsAreValid) {
+      setLoginError(
+        "The email address or password is incorrect. Please try again.",
+      );
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-
-    const validationErrors = validateForm();
-
-    if (Object.keys(validationErrors).length > 0) {
-      setFormErrors(validationErrors);
       return;
     }
 
-    setFormErrors({});
-    setLoginError("");
-    setIsSubmitting(true);
+    login();
 
-    try {
-      await new Promise<void>((resolve) => {
-        window.setTimeout(resolve, 800);
-      });
-
-      const normalizedEmail =
-        formData.email.trim().toLowerCase();
-
-      const credentialsAreValid =
-        normalizedEmail === DEMO_EMAIL &&
-        formData.password === DEMO_PASSWORD;
-
-      if (!credentialsAreValid) {
-        setLoginError(
-          "The email address or password is incorrect. Please try again.",
-        );
-        return;
-      }
-
-      login();
-
-      navigate("/dashboard", {
-        replace: true,
-      });
-    } catch {
-      setLoginError(
-        "We could not sign you in. Please try again in a few moments.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    navigate("/dashboard", {
+      replace: true,
+    });
   }
 
   return (
@@ -155,7 +113,10 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div className="space-y-5">
             <div>
               <Label
@@ -168,27 +129,25 @@ export default function LoginPage() {
 
               <Input
                 id="email"
-                name="email"
                 type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
                 autoComplete="email"
                 autoFocus
                 placeholder="you@company.com"
-                error={formErrors.email}
+                disabled={isSubmitting}
+                error={errors.email?.message}
+                {...register("email")}
               />
             </div>
 
             <PasswordInput
               id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              disabled={isSubmitting}
-              error={formErrors.password}
-              required
+              label="Password"
               autoComplete="current-password"
+              placeholder="Enter your password"
+              disabled={isSubmitting}
+              required
+              error={errors.password?.message}
+              {...register("password")}
             />
 
             <Button

@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import MainLayout from "../layout/MainLayout";
-
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import CustomersPage from "../pages/customer/CustomersPage";
 import SettingsPage from "../pages/settings/SettingsPage";

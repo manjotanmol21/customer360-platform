@@ -1,32 +1,33 @@
-import { useState } from "react";
+import {
+  forwardRef,
+  useState,
+  type InputHTMLAttributes,
+} from "react";
+
 import Input from "../UI/Input";
 import Label from "../UI/Label";
 
-interface PasswordInputProps {
-  id: string;
-  name: string;
-  value: string;
+interface PasswordInputProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
-  placeholder?: string;
   error?: string;
-  disabled?: boolean;
   required?: boolean;
-  autoComplete?: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function PasswordInput({
-  id,
-  name,
-  value,
-  label = "Password",
-  placeholder = "Enter your password",
-  error,
-  disabled = false,
-  required = false,
-  autoComplete = "current-password",
-  onChange,
-}: PasswordInputProps) {
+const PasswordInput = forwardRef<
+  HTMLInputElement,
+  PasswordInputProps
+>(function PasswordInput(
+  {
+    id = "password",
+    label = "Password",
+    error,
+    required = false,
+    disabled,
+    ...inputProps
+  },
+  ref,
+) {
   const [showPassword, setShowPassword] = useState(false);
 
   function handlePasswordVisibility() {
@@ -49,7 +50,9 @@ export default function PasswordInput({
           disabled={disabled}
           className="text-sm font-semibold text-blue-700 transition hover:text-blue-900 disabled:cursor-not-allowed disabled:text-slate-400"
           aria-label={
-            showPassword ? "Hide password" : "Show password"
+            showPassword
+              ? "Hide password"
+              : "Show password"
           }
           aria-controls={id}
         >
@@ -58,16 +61,17 @@ export default function PasswordInput({
       </div>
 
       <Input
+        ref={ref}
         id={id}
-        name={name}
         type={showPassword ? "text" : "password"}
-        value={value}
-        onChange={onChange}
         disabled={disabled}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
         error={error}
+        {...inputProps}
       />
     </div>
   );
-}
+});
+
+PasswordInput.displayName = "PasswordInput";
+
+export default PasswordInput;
