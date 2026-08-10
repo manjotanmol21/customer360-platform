@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
-  console.log("SIDEBAR COMPONENT IS RENDERING");
+  // console.log("SIDEBAR COMPONENT IS RENDERING");
   const navigate = useNavigate();
   const { logout } = useAuth();
 
