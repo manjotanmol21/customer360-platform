@@ -1,6 +1,11 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import CustomerEmptyState from "../../components/customer/CustomerEmptyState";
+import CustomerPagination from "../../components/customer/CustomerPagination";
 import CustomerSearch from "../../components/customer/CustomerSearch";
 import CustomerSort, {
   type CustomerSortValue,
@@ -12,6 +17,8 @@ import CustomerTable from "../../components/customer/CustomerTable";
 import Card from "../../components/UI/Card";
 import { customers } from "../../features/customers/data/customers";
 
+const PAGE_SIZE = 2;
+
 export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -20,6 +27,9 @@ export default function CustomersPage() {
 
   const [sortBy, setSortBy] =
     useState<CustomerSortValue>("name");
+
+  const [currentPage, setCurrentPage] =
+    useState(1);
 
   const normalizedSearch =
     searchTerm.trim().toLowerCase();
@@ -79,6 +89,34 @@ export default function CustomersPage() {
     return copy;
   }, [filteredCustomers, sortBy]);
 
+  const totalPages = Math.ceil(
+    sortedCustomers.length / PAGE_SIZE,
+  );
+
+  const paginatedCustomers = useMemo(() => {
+    const startIndex =
+      (currentPage - 1) * PAGE_SIZE;
+
+    const endIndex =
+      startIndex + PAGE_SIZE;
+
+    return sortedCustomers.slice(
+      startIndex,
+      endIndex,
+    );
+  }, [currentPage, sortedCustomers]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    statusFilter,
+    sortBy,
+  ]);
+
+  const hasCustomers =
+    sortedCustomers.length > 0;
+
   return (
     <section>
       <div>
@@ -96,8 +134,8 @@ export default function CustomersPage() {
         shadow="small"
         className="mt-8"
       >
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row">
-          <div className="flex-1">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="min-w-0 flex-1">
             <CustomerSearch
               value={searchTerm}
               onChange={setSearchTerm}
@@ -115,10 +153,30 @@ export default function CustomersPage() {
           />
         </div>
 
-        {sortedCustomers.length > 0 ? (
-          <CustomerTable
-            customers={sortedCustomers}
-          />
+        {hasCustomers ? (
+          <>
+            <div className="mb-4 flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                Showing{" "}
+                {paginatedCustomers.length} of{" "}
+                {sortedCustomers.length} customers
+              </p>
+
+              <p>
+                Page {currentPage} of {totalPages}
+              </p>
+            </div>
+
+            <CustomerTable
+              customers={paginatedCustomers}
+            />
+
+            <CustomerPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <CustomerEmptyState
             searchTerm={searchTerm}
