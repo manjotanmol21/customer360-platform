@@ -1,7 +1,84 @@
+import { useMemo, useState } from "react";
+
+import CustomerEmptyState from "../../components/customer/CustomerEmptyState";
+import CustomerSearch from "../../components/customer/CustomerSearch";
+import CustomerSort, {
+  type CustomerSortValue,
+} from "../../components/customer/CustomerSort";
+import CustomerStatusFilter, {
+  type CustomerStatusFilterValue,
+} from "../../components/customer/CustomerStatusFilter";
+import CustomerTable from "../../components/customer/CustomerTable";
 import Card from "../../components/UI/Card";
 import { customers } from "../../features/customers/data/customers";
 
 export default function CustomersPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [statusFilter, setStatusFilter] =
+    useState<CustomerStatusFilterValue>("All");
+
+  const [sortBy, setSortBy] =
+    useState<CustomerSortValue>("name");
+
+  const normalizedSearch =
+    searchTerm.trim().toLowerCase();
+
+  const filteredCustomers = customers.filter(
+    (customer) => {
+      const fullName =
+        `${customer.firstName} ${customer.lastName}`.toLowerCase();
+
+      const matchesSearch =
+        fullName.includes(normalizedSearch) ||
+        customer.company
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        customer.email
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        customer.phone
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        customer.status
+          .toLowerCase()
+          .includes(normalizedSearch);
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        customer.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    },
+  );
+
+  const sortedCustomers = useMemo(() => {
+    const copy = [...filteredCustomers];
+
+    switch (sortBy) {
+      case "company":
+        copy.sort((a, b) =>
+          a.company.localeCompare(b.company),
+        );
+        break;
+
+      case "created":
+        copy.sort((a, b) =>
+          a.createdAt.localeCompare(b.createdAt),
+        );
+        break;
+
+      default:
+        copy.sort((a, b) =>
+          `${a.firstName} ${a.lastName}`.localeCompare(
+            `${b.firstName} ${b.lastName}`,
+          ),
+        );
+    }
+
+    return copy;
+  }, [filteredCustomers, sortBy]);
+
   return (
     <section>
       <div>
@@ -19,81 +96,34 @@ export default function CustomersPage() {
         shadow="small"
         className="mt-8"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                  Name
-                </th>
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row">
+          <div className="flex-1">
+            <CustomerSearch
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
+          </div>
 
-                <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                  Company
-                </th>
+          <CustomerStatusFilter
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
 
-                <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                  Email
-                </th>
-
-                <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                  Phone
-                </th>
-
-                <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                  Status
-                </th>
-
-                <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                  Created
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {customers.map((customer) => (
-                <tr
-                  key={customer.id}
-                  className="border-b border-slate-100 last:border-b-0"
-                >
-                  <td className="px-4 py-4 text-sm font-medium text-slate-900">
-                    {customer.firstName} {customer.lastName}
-                  </td>
-
-                  <td className="px-4 py-4 text-sm text-slate-600">
-                    {customer.company}
-                  </td>
-
-                  <td className="px-4 py-4 text-sm text-slate-600">
-                    {customer.email}
-                  </td>
-
-                  <td className="px-4 py-4 text-sm text-slate-600">
-                    {customer.phone}
-                  </td>
-
-                  <td className="px-4 py-4 text-sm">
-                    <span
-                      className={[
-                        "inline-flex rounded-full px-3 py-1 text-xs font-medium",
-                        customer.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : customer.status === "Pending"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-slate-100 text-slate-600",
-                      ].join(" ")}
-                    >
-                      {customer.status}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4 text-sm text-slate-600">
-                    {customer.createdAt}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <CustomerSort
+            value={sortBy}
+            onChange={setSortBy}
+          />
         </div>
+
+        {sortedCustomers.length > 0 ? (
+          <CustomerTable
+            customers={sortedCustomers}
+          />
+        ) : (
+          <CustomerEmptyState
+            searchTerm={searchTerm}
+          />
+        )}
       </Card>
     </section>
   );
