@@ -1,83 +1,92 @@
-import { useMemo, useState } from "react";
-
 import CustomerEmptyState from "../../components/customer/CustomerEmptyState";
+import CustomerPagination from "../../components/customer/CustomerPagination";
 import CustomerSearch from "../../components/customer/CustomerSearch";
-import CustomerSort, {
-  type CustomerSortValue,
-} from "../../components/customer/CustomerSort";
-import CustomerStatusFilter, {
-  type CustomerStatusFilterValue,
-} from "../../components/customer/CustomerStatusFilter";
+import CustomerSort from "../../components/customer/CustomerSort";
+import CustomerStatusFilter from "../../components/customer/CustomerStatusFilter";
 import CustomerTable from "../../components/customer/CustomerTable";
+import CustomerTableError from "../../components/customer/CustomerTableError";
+import CustomerTableLoading from "../../components/customer/CustomerTableLoading";
 import Card from "../../components/UI/Card";
-import { customers } from "../../features/customers/data/customers";
+
+import { useCustomers } from "../../hooks/useCustomers";
 
 export default function CustomersPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const {
+    searchTerm,
+    setSearchTerm,
 
-  const [statusFilter, setStatusFilter] =
-    useState<CustomerStatusFilterValue>("All");
+    statusFilter,
+    setStatusFilter,
 
-  const [sortBy, setSortBy] =
-    useState<CustomerSortValue>("name");
+    sortBy,
+    setSortBy,
 
-  const normalizedSearch =
-    searchTerm.trim().toLowerCase();
+    currentPage,
+    setCurrentPage,
 
-  const filteredCustomers = customers.filter(
-    (customer) => {
-      const fullName =
-        `${customer.firstName} ${customer.lastName}`.toLowerCase();
+    sortedCustomers,
+    paginatedCustomers,
+    totalPages,
+  } = useCustomers();
 
-      const matchesSearch =
-        fullName.includes(normalizedSearch) ||
-        customer.company
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        customer.email
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        customer.phone
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        customer.status
-          .toLowerCase()
-          .includes(normalizedSearch);
+  /*
+   * Temporary placeholders.
+   *
+   * React Query will later replace these.
+   */
+  const isLoading = false;
+  const isError = false;
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        customer.status === statusFilter;
+  const hasCustomers =
+    sortedCustomers.length > 0;
 
-      return matchesSearch && matchesStatus;
-    },
-  );
-
-  const sortedCustomers = useMemo(() => {
-    const copy = [...filteredCustomers];
-
-    switch (sortBy) {
-      case "company":
-        copy.sort((a, b) =>
-          a.company.localeCompare(b.company),
-        );
-        break;
-
-      case "created":
-        copy.sort((a, b) =>
-          a.createdAt.localeCompare(b.createdAt),
-        );
-        break;
-
-      default:
-        copy.sort((a, b) =>
-          `${a.firstName} ${a.lastName}`.localeCompare(
-            `${b.firstName} ${b.lastName}`,
-          ),
-        );
+  function renderCustomerContent() {
+    if (isLoading) {
+      return <CustomerTableLoading />;
     }
 
-    return copy;
-  }, [filteredCustomers, sortBy]);
+    if (isError) {
+      return (
+        <CustomerTableError
+          message="Please try again in a few moments."
+        />
+      );
+    }
+
+    if (!hasCustomers) {
+      return (
+        <CustomerEmptyState
+          searchTerm={searchTerm}
+        />
+      );
+    }
+
+    return (
+      <>
+        <div className="mb-4 flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Showing{" "}
+            {paginatedCustomers.length} of{" "}
+            {sortedCustomers.length} customers
+          </p>
+
+          <p>
+            Page {currentPage} of {totalPages}
+          </p>
+        </div>
+
+        <CustomerTable
+          customers={paginatedCustomers}
+        />
+
+        <CustomerPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </>
+    );
+  }
 
   return (
     <section>
@@ -96,8 +105,8 @@ export default function CustomersPage() {
         shadow="small"
         className="mt-8"
       >
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row">
-          <div className="flex-1">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="min-w-0 flex-1">
             <CustomerSearch
               value={searchTerm}
               onChange={setSearchTerm}
@@ -115,15 +124,7 @@ export default function CustomersPage() {
           />
         </div>
 
-        {sortedCustomers.length > 0 ? (
-          <CustomerTable
-            customers={sortedCustomers}
-          />
-        ) : (
-          <CustomerEmptyState
-            searchTerm={searchTerm}
-          />
-        )}
+        {renderCustomerContent()}
       </Card>
     </section>
   );
