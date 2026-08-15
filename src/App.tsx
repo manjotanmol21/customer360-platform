@@ -7,6 +7,7 @@ import {
 import MainLayout from "./layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import CustomerDetailsPage from "./pages/customer/CustomerDetailsPage";
+import CustomerEditPage from "./pages/customer/CustomerEditPage";
 import CustomersPage from "./pages/customer/CustomersPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import SettingsPage from "./pages/settings/SettingsPage";
@@ -73,6 +74,11 @@ export default function App() {
         <Route
           path=":customerId"
           element={<CustomerDetailsPage />}
+        />
+
+        <Route
+          path=":customerId/edit"
+          element={<CustomerEditPage />}
         />
       </Route>
 

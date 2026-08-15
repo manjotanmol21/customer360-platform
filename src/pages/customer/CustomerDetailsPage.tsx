@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import CustomerDetailField from "../../components/customer/CustomerDetailField";
 import Button from "../../components/UI/Button";
@@ -7,6 +7,7 @@ import { customers } from "../../features/customers/data/customers";
 
 export default function CustomerDetailsPage() {
   const { customerId } = useParams();
+  const navigate = useNavigate();
 
   const customer = customers.find(
     (item) => item.id === Number(customerId),
@@ -15,10 +16,7 @@ export default function CustomerDetailsPage() {
   if (!customer) {
     return (
       <section>
-        <Card
-          padding="large"
-          shadow="small"
-        >
+        <Card padding="large" shadow="small">
           <h1 className="text-2xl font-bold text-slate-950">
             Customer not found
           </h1>
@@ -38,14 +36,6 @@ export default function CustomerDetailsPage() {
     );
   }
 
-  /*
-   * At this point customer cannot be undefined because
-   * the component already returned above when no customer
-   * was found.
-   *
-   * Creating this alias also makes the TypeScript type
-   * explicit and safe inside callback functions.
-   */
   const selectedCustomer = customer;
 
   const statusClasses = [
@@ -58,14 +48,12 @@ export default function CustomerDetailsPage() {
   ].join(" ");
 
   function handleEditCustomer() {
-    alert(
-      `Edit customer functionality will be added for ${selectedCustomer.firstName} ${selectedCustomer.lastName}.`,
-    );
+    navigate(`/customers/${selectedCustomer.id}/edit`);
   }
 
   function handleDeleteCustomer() {
     alert(
-      `Delete customer functionality will be added for ${selectedCustomer.firstName} ${selectedCustomer.lastName}.`,
+      `Delete functionality will be implemented later for ${selectedCustomer.firstName} ${selectedCustomer.lastName}.`,
     );
   }
 
@@ -110,10 +98,7 @@ export default function CustomerDetailsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card
-          padding="large"
-          shadow="small"
-        >
+        <Card padding="large" shadow="small">
           <h2 className="text-lg font-semibold text-slate-950">
             Contact Information
           </h2>
@@ -136,10 +121,7 @@ export default function CustomerDetailsPage() {
           </dl>
         </Card>
 
-        <Card
-          padding="large"
-          shadow="small"
-        >
+        <Card padding="large" shadow="small">
           <h2 className="text-lg font-semibold text-slate-950">
             Account Information
           </h2>
