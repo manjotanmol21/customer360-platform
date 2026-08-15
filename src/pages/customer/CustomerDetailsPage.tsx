@@ -1,5 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 
+import CustomerDetailField from "../../components/customer/CustomerDetailField";
+import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
 import { customers } from "../../features/customers/data/customers";
 
@@ -27,7 +29,7 @@ export default function CustomerDetailsPage() {
 
           <Link
             to="/customers"
-            className="mt-6 inline-flex text-sm font-semibold text-blue-700 hover:text-blue-900"
+            className="mt-6 inline-flex text-sm font-semibold text-blue-700 transition hover:text-blue-900"
           >
             ← Back to customers
           </Link>
@@ -36,23 +38,75 @@ export default function CustomerDetailsPage() {
     );
   }
 
+  /*
+   * At this point customer cannot be undefined because
+   * the component already returned above when no customer
+   * was found.
+   *
+   * Creating this alias also makes the TypeScript type
+   * explicit and safe inside callback functions.
+   */
+  const selectedCustomer = customer;
+
+  const statusClasses = [
+    "inline-flex rounded-full px-3 py-1 text-xs font-medium",
+    selectedCustomer.status === "Active"
+      ? "bg-green-100 text-green-700"
+      : selectedCustomer.status === "Pending"
+        ? "bg-amber-100 text-amber-700"
+        : "bg-slate-100 text-slate-600",
+  ].join(" ");
+
+  function handleEditCustomer() {
+    alert(
+      `Edit customer functionality will be added for ${selectedCustomer.firstName} ${selectedCustomer.lastName}.`,
+    );
+  }
+
+  function handleDeleteCustomer() {
+    alert(
+      `Delete customer functionality will be added for ${selectedCustomer.firstName} ${selectedCustomer.lastName}.`,
+    );
+  }
+
   return (
     <section>
       <div className="mb-8">
         <Link
           to="/customers"
-          className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+          className="text-sm font-semibold text-blue-700 transition hover:text-blue-900"
         >
           ← Back to customers
         </Link>
 
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">
-          {customer.firstName} {customer.lastName}
-        </h1>
+        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+              {selectedCustomer.firstName}{" "}
+              {selectedCustomer.lastName}
+            </h1>
 
-        <p className="mt-2 text-sm text-slate-600">
-          Customer profile and account information.
-        </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Customer profile and account information.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="secondary"
+              onClick={handleEditCustomer}
+            >
+              Edit Customer
+            </Button>
+
+            <Button
+              variant="danger"
+              onClick={handleDeleteCustomer}
+            >
+              Delete Customer
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -65,35 +119,20 @@ export default function CustomerDetailsPage() {
           </h2>
 
           <dl className="mt-6 space-y-5">
-            <div>
-              <dt className="text-sm font-medium text-slate-500">
-                Full Name
-              </dt>
+            <CustomerDetailField
+              label="Full Name"
+              value={`${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
+            />
 
-              <dd className="mt-1 text-sm font-medium text-slate-900">
-                {customer.firstName} {customer.lastName}
-              </dd>
-            </div>
+            <CustomerDetailField
+              label="Email"
+              value={selectedCustomer.email}
+            />
 
-            <div>
-              <dt className="text-sm font-medium text-slate-500">
-                Email
-              </dt>
-
-              <dd className="mt-1 text-sm text-slate-900">
-                {customer.email}
-              </dd>
-            </div>
-
-            <div>
-              <dt className="text-sm font-medium text-slate-500">
-                Phone
-              </dt>
-
-              <dd className="mt-1 text-sm text-slate-900">
-                {customer.phone}
-              </dd>
-            </div>
+            <CustomerDetailField
+              label="Phone"
+              value={selectedCustomer.phone}
+            />
           </dl>
         </Card>
 
@@ -106,15 +145,10 @@ export default function CustomerDetailsPage() {
           </h2>
 
           <dl className="mt-6 space-y-5">
-            <div>
-              <dt className="text-sm font-medium text-slate-500">
-                Company
-              </dt>
-
-              <dd className="mt-1 text-sm font-medium text-slate-900">
-                {customer.company}
-              </dd>
-            </div>
+            <CustomerDetailField
+              label="Company"
+              value={selectedCustomer.company}
+            />
 
             <div>
               <dt className="text-sm font-medium text-slate-500">
@@ -122,30 +156,21 @@ export default function CustomerDetailsPage() {
               </dt>
 
               <dd className="mt-2">
-                <span
-                  className={[
-                    "inline-flex rounded-full px-3 py-1 text-xs font-medium",
-                    customer.status === "Active"
-                      ? "bg-green-100 text-green-700"
-                      : customer.status === "Pending"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-slate-100 text-slate-600",
-                  ].join(" ")}
-                >
-                  {customer.status}
+                <span className={statusClasses}>
+                  {selectedCustomer.status}
                 </span>
               </dd>
             </div>
 
-            <div>
-              <dt className="text-sm font-medium text-slate-500">
-                Customer Since
-              </dt>
+            <CustomerDetailField
+              label="Customer Since"
+              value={selectedCustomer.createdAt}
+            />
 
-              <dd className="mt-1 text-sm text-slate-900">
-                {customer.createdAt}
-              </dd>
-            </div>
+            <CustomerDetailField
+              label="Customer ID"
+              value={String(selectedCustomer.id)}
+            />
           </dl>
         </Card>
       </div>
