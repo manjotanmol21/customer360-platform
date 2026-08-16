@@ -1,6 +1,13 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
 import MainLayout from "./layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
+import CustomerDetailsPage from "./pages/customer/CustomerDetailsPage";
+import CustomerEditPage from "./pages/customer/CustomerEditPage";
 import CustomersPage from "./pages/customer/CustomersPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import SettingsPage from "./pages/settings/SettingsPage";
@@ -8,11 +15,17 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 
 function RootRedirect() {
   const isAuthenticated =
-    sessionStorage.getItem("customer360_authenticated") === "true";
+    sessionStorage.getItem(
+      "customer360_authenticated",
+    ) === "true";
 
   return (
     <Navigate
-      to={isAuthenticated ? "/dashboard" : "/login"}
+      to={
+        isAuthenticated
+          ? "/dashboard"
+          : "/login"
+      }
       replace
     />
   );
@@ -21,9 +34,15 @@ function RootRedirect() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
+      <Route
+        path="/"
+        element={<RootRedirect />}
+      />
 
-      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/login"
+        element={<LoginPage />}
+      />
 
       <Route
         path="/dashboard"
@@ -33,7 +52,10 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
+        <Route
+          index
+          element={<DashboardPage />}
+        />
       </Route>
 
       <Route
@@ -44,7 +66,20 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<CustomersPage />} />
+        <Route
+          index
+          element={<CustomersPage />}
+        />
+
+        <Route
+          path=":customerId"
+          element={<CustomerDetailsPage />}
+        />
+
+        <Route
+          path=":customerId/edit"
+          element={<CustomerEditPage />}
+        />
       </Route>
 
       <Route
@@ -55,12 +90,16 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<SettingsPage />} />
+        <Route
+          index
+          element={<SettingsPage />}
+        />
       </Route>
 
-      <Route path="*" element={<RootRedirect />} />
+      <Route
+        path="*"
+        element={<RootRedirect />}
+      />
     </Routes>
   );
 }
-
-

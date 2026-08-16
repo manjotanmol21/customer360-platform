@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 import type { Customer } from "../../features/customers/types/customer";
 
 interface CustomerRowProps {
@@ -7,6 +9,21 @@ interface CustomerRowProps {
 export default function CustomerRow({
   customer,
 }: CustomerRowProps) {
+  const navigate = useNavigate();
+
+  function handleRowClick() {
+    navigate(`/customers/${customer.id}`);
+  }
+
+  function handleKeyDown(
+    event: React.KeyboardEvent<HTMLTableRowElement>,
+  ) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleRowClick();
+    }
+  }
+
   const statusClasses = [
     "inline-flex rounded-full px-3 py-1 text-xs font-medium",
     customer.status === "Active"
@@ -17,7 +34,14 @@ export default function CustomerRow({
   ].join(" ");
 
   return (
-    <tr className="border-b border-slate-100 last:border-b-0">
+    <tr
+      onClick={handleRowClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="link"
+      aria-label={`Open ${customer.firstName} ${customer.lastName}`}
+      className="cursor-pointer border-b border-slate-100 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 last:border-b-0"
+    >
       <td className="px-4 py-4 text-sm font-medium text-slate-900">
         {customer.firstName} {customer.lastName}
       </td>
