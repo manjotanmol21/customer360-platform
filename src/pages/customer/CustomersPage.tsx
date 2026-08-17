@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import CustomerEmptyState from "../../components/customer/CustomerEmptyState";
 import CustomerPagination from "../../components/customer/CustomerPagination";
 import CustomerSearch from "../../components/customer/CustomerSearch";
@@ -6,6 +8,7 @@ import CustomerStatusFilter from "../../components/customer/CustomerStatusFilter
 import CustomerTable from "../../components/customer/CustomerTable";
 import CustomerTableError from "../../components/customer/CustomerTableError";
 import CustomerTableLoading from "../../components/customer/CustomerTableLoading";
+import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
 
 import { useCustomers } from "../../hooks/useCustomers";
@@ -29,11 +32,6 @@ export default function CustomersPage() {
     totalPages,
   } = useCustomers();
 
-  /*
-   * Temporary placeholders.
-   *
-   * React Query will later replace these.
-   */
   const isLoading = false;
   const isError = false;
 
@@ -90,14 +88,22 @@ export default function CustomersPage() {
 
   return (
     <section>
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-          Customers
-        </h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+            Customers
+          </h1>
 
-        <p className="mt-2 text-sm text-slate-600">
-          View and manage customers in the Customer360 platform.
-        </p>
+          <p className="mt-2 text-sm text-slate-600">
+            View and manage customers in the Customer360 platform.
+          </p>
+        </div>
+
+        <Link to="/customers/new">
+          <Button>
+            Add Customer
+          </Button>
+        </Link>
       </div>
 
       <Card

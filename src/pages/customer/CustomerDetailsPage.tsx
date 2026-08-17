@@ -1,5 +1,11 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
+import CustomerDeleteModal from "../../components/customer/CustomerDeleteModal";
 import CustomerDetailField from "../../components/customer/CustomerDetailField";
 import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
@@ -9,6 +15,12 @@ export default function CustomerDetailsPage() {
   const { customerId } = useParams();
   const navigate = useNavigate();
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] =
+    useState(false);
+
+  const [isDeleting, setIsDeleting] =
+    useState(false);
+
   const customer = customers.find(
     (item) => item.id === Number(customerId),
   );
@@ -16,7 +28,10 @@ export default function CustomerDetailsPage() {
   if (!customer) {
     return (
       <section>
-        <Card padding="large" shadow="small">
+        <Card
+          padding="large"
+          shadow="small"
+        >
           <h1 className="text-2xl font-bold text-slate-950">
             Customer not found
           </h1>
@@ -48,114 +63,164 @@ export default function CustomerDetailsPage() {
   ].join(" ");
 
   function handleEditCustomer() {
-    navigate(`/customers/${selectedCustomer.id}/edit`);
-  }
-
-  function handleDeleteCustomer() {
-    alert(
-      `Delete functionality will be implemented later for ${selectedCustomer.firstName} ${selectedCustomer.lastName}.`,
+    navigate(
+      `/customers/${selectedCustomer.id}/edit`,
     );
   }
 
+  function handleOpenDeleteModal() {
+    setIsDeleteModalOpen(true);
+  }
+
+  function handleCloseDeleteModal() {
+    if (isDeleting) {
+      return;
+    }
+
+    setIsDeleteModalOpen(false);
+  }
+
+  async function handleConfirmDelete() {
+    setIsDeleting(true);
+
+    try {
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 800);
+      });
+
+      console.log(
+        "Deleted customer:",
+        selectedCustomer,
+      );
+
+      alert(
+        `${selectedCustomer.firstName} ${selectedCustomer.lastName} has been deleted.`,
+      );
+
+      navigate("/customers", {
+        replace: true,
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  }
+
   return (
-    <section>
-      <div className="mb-8">
-        <Link
-          to="/customers"
-          className="text-sm font-semibold text-blue-700 transition hover:text-blue-900"
-        >
-          ← Back to customers
-        </Link>
+    <>
+      <section>
+        <div className="mb-8">
+          <Link
+            to="/customers"
+            className="text-sm font-semibold text-blue-700 transition hover:text-blue-900"
+          >
+            ← Back to customers
+          </Link>
 
-        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-              {selectedCustomer.firstName}{" "}
-              {selectedCustomer.lastName}
-            </h1>
-
-            <p className="mt-2 text-sm text-slate-600">
-              Customer profile and account information.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="secondary"
-              onClick={handleEditCustomer}
-            >
-              Edit Customer
-            </Button>
-
-            <Button
-              variant="danger"
-              onClick={handleDeleteCustomer}
-            >
-              Delete Customer
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card padding="large" shadow="small">
-          <h2 className="text-lg font-semibold text-slate-950">
-            Contact Information
-          </h2>
-
-          <dl className="mt-6 space-y-5">
-            <CustomerDetailField
-              label="Full Name"
-              value={`${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
-            />
-
-            <CustomerDetailField
-              label="Email"
-              value={selectedCustomer.email}
-            />
-
-            <CustomerDetailField
-              label="Phone"
-              value={selectedCustomer.phone}
-            />
-          </dl>
-        </Card>
-
-        <Card padding="large" shadow="small">
-          <h2 className="text-lg font-semibold text-slate-950">
-            Account Information
-          </h2>
-
-          <dl className="mt-6 space-y-5">
-            <CustomerDetailField
-              label="Company"
-              value={selectedCustomer.company}
-            />
-
+          <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <dt className="text-sm font-medium text-slate-500">
-                Status
-              </dt>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+                {selectedCustomer.firstName}{" "}
+                {selectedCustomer.lastName}
+              </h1>
 
-              <dd className="mt-2">
-                <span className={statusClasses}>
-                  {selectedCustomer.status}
-                </span>
-              </dd>
+              <p className="mt-2 text-sm text-slate-600">
+                Customer profile and account information.
+              </p>
             </div>
 
-            <CustomerDetailField
-              label="Customer Since"
-              value={selectedCustomer.createdAt}
-            />
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="secondary"
+                onClick={handleEditCustomer}
+              >
+                Edit Customer
+              </Button>
 
-            <CustomerDetailField
-              label="Customer ID"
-              value={String(selectedCustomer.id)}
-            />
-          </dl>
-        </Card>
-      </div>
-    </section>
+              <Button
+                variant="danger"
+                onClick={handleOpenDeleteModal}
+              >
+                Delete Customer
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card
+            padding="large"
+            shadow="small"
+          >
+            <h2 className="text-lg font-semibold text-slate-950">
+              Contact Information
+            </h2>
+
+            <dl className="mt-6 space-y-5">
+              <CustomerDetailField
+                label="Full Name"
+                value={`${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
+              />
+
+              <CustomerDetailField
+                label="Email"
+                value={selectedCustomer.email}
+              />
+
+              <CustomerDetailField
+                label="Phone"
+                value={selectedCustomer.phone}
+              />
+            </dl>
+          </Card>
+
+          <Card
+            padding="large"
+            shadow="small"
+          >
+            <h2 className="text-lg font-semibold text-slate-950">
+              Account Information
+            </h2>
+
+            <dl className="mt-6 space-y-5">
+              <CustomerDetailField
+                label="Company"
+                value={selectedCustomer.company}
+              />
+
+              <div>
+                <dt className="text-sm font-medium text-slate-500">
+                  Status
+                </dt>
+
+                <dd className="mt-2">
+                  <span className={statusClasses}>
+                    {selectedCustomer.status}
+                  </span>
+                </dd>
+              </div>
+
+              <CustomerDetailField
+                label="Customer Since"
+                value={selectedCustomer.createdAt}
+              />
+
+              <CustomerDetailField
+                label="Customer ID"
+                value={String(selectedCustomer.id)}
+              />
+            </dl>
+          </Card>
+        </div>
+      </section>
+
+      <CustomerDeleteModal
+        customerName={`${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
+        isOpen={isDeleteModalOpen}
+        isDeleting={isDeleting}
+        onCancel={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 }

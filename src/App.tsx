@@ -6,6 +6,7 @@ import {
 
 import MainLayout from "./layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
+import CustomerCreatePage from "./pages/customer/CustomerCreatePage";
 import CustomerDetailsPage from "./pages/customer/CustomerDetailsPage";
 import CustomerEditPage from "./pages/customer/CustomerEditPage";
 import CustomersPage from "./pages/customer/CustomersPage";
@@ -69,6 +70,11 @@ export default function App() {
         <Route
           index
           element={<CustomersPage />}
+        />
+
+        <Route
+          path="new"
+          element={<CustomerCreatePage />}
         />
 
         <Route
