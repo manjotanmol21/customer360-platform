@@ -1,9 +1,11 @@
 interface CustomerTableErrorProps {
   message?: string;
+  onRetry?: () => void;
 }
 
 export default function CustomerTableError({
   message = "We could not load the customer list.",
+  onRetry,
 }: CustomerTableErrorProps) {
   return (
     <div
@@ -17,6 +19,16 @@ export default function CustomerTableError({
       <p className="mt-2 text-sm text-red-700">
         {message}
       </p>
+
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-5 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-300"
+        >
+          Try again
+        </button>
+      )}
     </div>
   );
 }

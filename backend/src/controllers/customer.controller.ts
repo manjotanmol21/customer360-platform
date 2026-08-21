@@ -1,9 +1,14 @@
-import type { Request, Response } from "express";
+import type {
+  Request,
+  Response,
+} from "express";
+
 import {
   createCustomer,
   deleteCustomer,
   getAllCustomers,
   getCustomerById,
+  isCustomerStatus,
   updateCustomer,
   type CreateCustomerInput,
   type UpdateCustomerInput,
@@ -27,16 +32,21 @@ export const getCustomer = (
 ): void => {
   const customerId = Number(req.params.id);
 
-  if (Number.isNaN(customerId)) {
+  if (
+    !Number.isInteger(customerId) ||
+    customerId <= 0
+  ) {
     res.status(400).json({
       success: false,
-      message: "Customer ID must be a valid number",
+      message:
+        "Customer ID must be a positive integer",
     });
 
     return;
   }
 
-  const customer = getCustomerById(customerId);
+  const customer =
+    getCustomerById(customerId);
 
   if (!customer) {
     res.status(404).json({
@@ -57,22 +67,48 @@ export const addCustomer = (
   req: Request,
   res: Response,
 ): void => {
-  const { name, email, company } =
-    req.body as Partial<CreateCustomerInput>;
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    company,
+    status,
+  } = req.body as Partial<CreateCustomerInput>;
 
-  if (!name || !email || !company) {
+  if (
+    !firstName?.trim() ||
+    !lastName?.trim() ||
+    !email?.trim() ||
+    !phone?.trim() ||
+    !company?.trim()
+  ) {
     res.status(400).json({
       success: false,
-      message: "Name, email and company are required",
+      message:
+        "First name, last name, email, phone and company are required",
+    });
+
+    return;
+  }
+
+  if (!isCustomerStatus(status)) {
+    res.status(400).json({
+      success: false,
+      message:
+        "Status must be Active, Pending or Inactive",
     });
 
     return;
   }
 
   const newCustomer = createCustomer({
-    name,
-    email,
-    company,
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.trim(),
+    phone: phone.trim(),
+    company: company.trim(),
+    status,
   });
 
   res.status(201).json({
@@ -87,32 +123,65 @@ export const editCustomer = (
 ): void => {
   const customerId = Number(req.params.id);
 
-  if (Number.isNaN(customerId)) {
+  if (
+    !Number.isInteger(customerId) ||
+    customerId <= 0
+  ) {
     res.status(400).json({
       success: false,
-      message: "Customer ID must be a valid number",
+      message:
+        "Customer ID must be a positive integer",
     });
 
     return;
   }
 
-  const { name, email, company } =
-    req.body as Partial<UpdateCustomerInput>;
-
-  if (!name || !email || !company) {
-    res.status(400).json({
-      success: false,
-      message: "Name, email and company are required",
-    });
-
-    return;
-  }
-
-  const updatedCustomer = updateCustomer(customerId, {
-    name,
+  const {
+    firstName,
+    lastName,
     email,
+    phone,
     company,
-  });
+    status,
+  } = req.body as Partial<UpdateCustomerInput>;
+
+  if (
+    !firstName?.trim() ||
+    !lastName?.trim() ||
+    !email?.trim() ||
+    !phone?.trim() ||
+    !company?.trim()
+  ) {
+    res.status(400).json({
+      success: false,
+      message:
+        "First name, last name, email, phone and company are required",
+    });
+
+    return;
+  }
+
+  if (!isCustomerStatus(status)) {
+    res.status(400).json({
+      success: false,
+      message:
+        "Status must be Active, Pending or Inactive",
+    });
+
+    return;
+  }
+
+  const updatedCustomer = updateCustomer(
+    customerId,
+    {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      company: company.trim(),
+      status,
+    },
+  );
 
   if (!updatedCustomer) {
     res.status(404).json({
@@ -135,16 +204,21 @@ export const removeCustomer = (
 ): void => {
   const customerId = Number(req.params.id);
 
-  if (Number.isNaN(customerId)) {
+  if (
+    !Number.isInteger(customerId) ||
+    customerId <= 0
+  ) {
     res.status(400).json({
       success: false,
-      message: "Customer ID must be a valid number",
+      message:
+        "Customer ID must be a positive integer",
     });
 
     return;
   }
 
-  const deleted = deleteCustomer(customerId);
+  const deleted =
+    deleteCustomer(customerId);
 
   if (!deleted) {
     res.status(404).json({
