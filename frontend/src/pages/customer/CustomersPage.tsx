@@ -15,6 +15,10 @@ import { useCustomers } from "../../hooks/useCustomers";
 
 export default function CustomersPage() {
   const {
+    isLoading,
+    isError,
+    refetch,
+
     searchTerm,
     setSearchTerm,
 
@@ -32,11 +36,12 @@ export default function CustomersPage() {
     totalPages,
   } = useCustomers();
 
-  const isLoading = false;
-  const isError = false;
-
   const hasCustomers =
     sortedCustomers.length > 0;
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function renderCustomerContent() {
     if (isLoading) {
@@ -46,7 +51,8 @@ export default function CustomersPage() {
     if (isError) {
       return (
         <CustomerTableError
-          message="Please try again in a few moments."
+          message="The Customer360 API could not be reached. Please try again."
+          onRetry={handleRetry}
         />
       );
     }
@@ -69,12 +75,15 @@ export default function CustomersPage() {
           </p>
 
           <p>
-            Page {currentPage} of {totalPages}
+            Page {currentPage} of{" "}
+            {totalPages}
           </p>
         </div>
 
         <CustomerTable
-          customers={paginatedCustomers}
+          customers={
+            paginatedCustomers
+          }
         />
 
         <CustomerPagination
@@ -95,7 +104,8 @@ export default function CustomersPage() {
           </h1>
 
           <p className="mt-2 text-sm text-slate-600">
-            View and manage customers in the Customer360 platform.
+            View and manage customers in
+            the Customer360 platform.
           </p>
         </div>
 
@@ -121,7 +131,9 @@ export default function CustomersPage() {
 
           <CustomerStatusFilter
             value={statusFilter}
-            onChange={setStatusFilter}
+            onChange={
+              setStatusFilter
+            }
           />
 
           <CustomerSort

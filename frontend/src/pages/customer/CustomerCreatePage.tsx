@@ -8,37 +8,48 @@ import Card from "../../components/UI/Card";
 
 import type { CustomerFormValues } from "../../features/customers/schemas/customerSchema";
 
-const createCustomerDefaultValues: CustomerFormValues = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  company: "",
-  status: "Pending",
-};
+import { useCreateCustomer } from "../../hooks/useCustomer";
+
+const createCustomerDefaultValues: CustomerFormValues =
+  {
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    company: "",
+    status: "Pending",
+  };
 
 export default function CustomerCreatePage() {
   const navigate = useNavigate();
 
+  const createCustomerMutation =
+    useCreateCustomer();
+
   async function handleCreateCustomer(
     formData: CustomerFormValues,
   ) {
-    await new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 700);
-    });
+    try {
+      const customer =
+        await createCustomerMutation.mutateAsync(
+          formData,
+        );
 
-    console.log(
-      "New customer:",
-      formData,
-    );
+      alert(
+        `${customer.firstName} ${customer.lastName} has been created.`,
+      );
 
-    alert(
-      `${formData.firstName} ${formData.lastName} has been created.`,
-    );
-
-    navigate("/customers", {
-      replace: true,
-    });
+      navigate(
+        `/customers/${customer.id}`,
+        {
+          replace: true,
+        },
+      );
+    } catch {
+      alert(
+        "The customer could not be created. Please try again.",
+      );
+    }
   }
 
   function handleCancel() {
@@ -50,9 +61,9 @@ export default function CustomerCreatePage() {
       <div className="mb-8">
         <Link
           to="/customers"
-          className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+          className="text-sm font-semibold text-blue-700 transition hover:text-blue-900"
         >
-          ← Back to customers
+          Back to customers
         </Link>
 
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">
@@ -60,14 +71,14 @@ export default function CustomerCreatePage() {
         </h1>
 
         <p className="mt-2 text-sm text-slate-600">
-          Create a new customer profile in Customer360.
+          Create a customer profile in
+          the Customer360 platform.
         </p>
       </div>
 
       <Card
         padding="large"
         shadow="small"
-        className="max-w-3xl"
       >
         <CustomerForm
           defaultValues={
@@ -75,7 +86,9 @@ export default function CustomerCreatePage() {
           }
           submitLabel="Create Customer"
           loadingText="Creating..."
-          onSubmit={handleCreateCustomer}
+          onSubmit={
+            handleCreateCustomer
+          }
           onCancel={handleCancel}
         />
       </Card>

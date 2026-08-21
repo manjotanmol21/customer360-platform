@@ -7,64 +7,57 @@ import {
 
 import CustomerDeleteModal from "../../components/customer/CustomerDeleteModal";
 import CustomerDetailField from "../../components/customer/CustomerDetailField";
+import CustomerTableError from "../../components/customer/CustomerTableError";
+import CustomerTableLoading from "../../components/customer/CustomerTableLoading";
 import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
-import { customers } from "../../features/customers/data/customers";
+
+import {
+  useCustomer,
+  useDeleteCustomer,
+} from "../../hooks/useCustomer";
 
 export default function CustomerDetailsPage() {
   const { customerId } = useParams();
   const navigate = useNavigate();
 
-  const [isDeleteModalOpen, setIsDeleteModalOpen] =
-    useState(false);
+  const customerIdNumber =
+    Number(customerId);
 
-  const [isDeleting, setIsDeleting] =
-    useState(false);
+  const hasValidCustomerId =
+    Number.isInteger(customerIdNumber) &&
+    customerIdNumber > 0;
 
-  const customer = customers.find(
-    (item) => item.id === Number(customerId),
+  const {
+    data: customer,
+    isLoading,
+    isError,
+    refetch,
+  } = useCustomer(
+    hasValidCustomerId
+      ? customerIdNumber
+      : undefined,
   );
 
-  if (!customer) {
-    return (
-      <section>
-        <Card
-          padding="large"
-          shadow="small"
-        >
-          <h1 className="text-2xl font-bold text-slate-950">
-            Customer not found
-          </h1>
+  const deleteCustomerMutation =
+    useDeleteCustomer();
 
-          <p className="mt-2 text-sm text-slate-600">
-            The customer you requested does not exist.
-          </p>
+  const [
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+  ] = useState(false);
 
-          <Link
-            to="/customers"
-            className="mt-6 inline-flex text-sm font-semibold text-blue-700 transition hover:text-blue-900"
-          >
-            ← Back to customers
-          </Link>
-        </Card>
-      </section>
-    );
+  function handleRetry() {
+    void refetch();
   }
 
-  const selectedCustomer = customer;
-
-  const statusClasses = [
-    "inline-flex rounded-full px-3 py-1 text-xs font-medium",
-    selectedCustomer.status === "Active"
-      ? "bg-green-100 text-green-700"
-      : selectedCustomer.status === "Pending"
-        ? "bg-amber-100 text-amber-700"
-        : "bg-slate-100 text-slate-600",
-  ].join(" ");
-
   function handleEditCustomer() {
+    if (!customer) {
+      return;
+    }
+
     navigate(
-      `/customers/${selectedCustomer.id}/edit`,
+      `/customers/${customer.id}/edit`,
     );
   }
 
@@ -73,7 +66,9 @@ export default function CustomerDetailsPage() {
   }
 
   function handleCloseDeleteModal() {
-    if (isDeleting) {
+    if (
+      deleteCustomerMutation.isPending
+    ) {
       return;
     }
 
@@ -81,65 +76,117 @@ export default function CustomerDetailsPage() {
   }
 
   async function handleConfirmDelete() {
-    setIsDeleting(true);
+    if (!customer) {
+      return;
+    }
 
     try {
-      await new Promise<void>((resolve) => {
-        window.setTimeout(resolve, 800);
-      });
-
-      console.log(
-        "Deleted customer:",
-        selectedCustomer,
+      await deleteCustomerMutation.mutateAsync(
+        customer.id,
       );
 
       alert(
-        `${selectedCustomer.firstName} ${selectedCustomer.lastName} has been deleted.`,
+        `${customer.firstName} ${customer.lastName} has been deleted.`,
       );
 
       navigate("/customers", {
         replace: true,
       });
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteModalOpen(false);
+    } catch {
+      alert(
+        "The customer could not be deleted. Please try again.",
+      );
     }
   }
+
+  if (!hasValidCustomerId) {
+    return (
+      <CustomerNotFound />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <section>
+        <Card
+          padding="large"
+          shadow="small"
+        >
+          <CustomerTableLoading />
+        </Card>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section>
+        <Card
+          padding="large"
+          shadow="small"
+        >
+          <CustomerTableError
+            message="The customer could not be loaded. It may not exist, or the API may be unavailable."
+            onRetry={handleRetry}
+          />
+
+          <BackToCustomersLink />
+        </Card>
+      </section>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <CustomerNotFound />
+    );
+  }
+
+  const statusClasses = [
+    "inline-flex rounded-full px-3 py-1 text-xs font-medium",
+
+    customer.status === "Active"
+      ? "bg-green-100 text-green-700"
+      : customer.status ===
+          "Pending"
+        ? "bg-amber-100 text-amber-700"
+        : "bg-slate-100 text-slate-600",
+  ].join(" ");
 
   return (
     <>
       <section>
         <div className="mb-8">
-          <Link
-            to="/customers"
-            className="text-sm font-semibold text-blue-700 transition hover:text-blue-900"
-          >
-            ← Back to customers
-          </Link>
+          <BackToCustomersLink />
 
           <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-                {selectedCustomer.firstName}{" "}
-                {selectedCustomer.lastName}
+                {customer.firstName}{" "}
+                {customer.lastName}
               </h1>
 
               <p className="mt-2 text-sm text-slate-600">
-                Customer profile and account information.
+                Customer profile and
+                account information.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button
                 variant="secondary"
-                onClick={handleEditCustomer}
+                onClick={
+                  handleEditCustomer
+                }
               >
                 Edit Customer
               </Button>
 
               <Button
                 variant="danger"
-                onClick={handleOpenDeleteModal}
+                onClick={
+                  handleOpenDeleteModal
+                }
               >
                 Delete Customer
               </Button>
@@ -159,17 +206,17 @@ export default function CustomerDetailsPage() {
             <dl className="mt-6 space-y-5">
               <CustomerDetailField
                 label="Full Name"
-                value={`${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
+                value={`${customer.firstName} ${customer.lastName}`}
               />
 
               <CustomerDetailField
                 label="Email"
-                value={selectedCustomer.email}
+                value={customer.email}
               />
 
               <CustomerDetailField
                 label="Phone"
-                value={selectedCustomer.phone}
+                value={customer.phone}
               />
             </dl>
           </Card>
@@ -185,7 +232,7 @@ export default function CustomerDetailsPage() {
             <dl className="mt-6 space-y-5">
               <CustomerDetailField
                 label="Company"
-                value={selectedCustomer.company}
+                value={customer.company}
               />
 
               <div>
@@ -194,20 +241,28 @@ export default function CustomerDetailsPage() {
                 </dt>
 
                 <dd className="mt-2">
-                  <span className={statusClasses}>
-                    {selectedCustomer.status}
+                  <span
+                    className={
+                      statusClasses
+                    }
+                  >
+                    {customer.status}
                   </span>
                 </dd>
               </div>
 
               <CustomerDetailField
                 label="Customer Since"
-                value={selectedCustomer.createdAt}
+                value={
+                  customer.createdAt
+                }
               />
 
               <CustomerDetailField
                 label="Customer ID"
-                value={String(selectedCustomer.id)}
+                value={String(
+                  customer.id,
+                )}
               />
             </dl>
           </Card>
@@ -215,12 +270,51 @@ export default function CustomerDetailsPage() {
       </section>
 
       <CustomerDeleteModal
-        customerName={`${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
+        customerName={`${customer.firstName} ${customer.lastName}`}
         isOpen={isDeleteModalOpen}
-        isDeleting={isDeleting}
-        onCancel={handleCloseDeleteModal}
-        onConfirm={handleConfirmDelete}
+        isDeleting={
+          deleteCustomerMutation.isPending
+        }
+        onCancel={
+          handleCloseDeleteModal
+        }
+        onConfirm={
+          handleConfirmDelete
+        }
       />
     </>
+  );
+}
+
+function BackToCustomersLink() {
+  return (
+    <Link
+      to="/customers"
+      className="mt-6 inline-flex text-sm font-semibold text-blue-700 transition hover:text-blue-900"
+    >
+      Back to customers
+    </Link>
+  );
+}
+
+function CustomerNotFound() {
+  return (
+    <section>
+      <Card
+        padding="large"
+        shadow="small"
+      >
+        <h1 className="text-2xl font-bold text-slate-950">
+          Customer not found
+        </h1>
+
+        <p className="mt-2 text-sm text-slate-600">
+          The customer you requested
+          does not exist.
+        </p>
+
+        <BackToCustomersLink />
+      </Card>
+    </section>
   );
 }

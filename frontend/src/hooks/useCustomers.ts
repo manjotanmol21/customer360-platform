@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   useEffect,
   useMemo,
@@ -7,15 +8,29 @@ import {
 import type { CustomerSortValue } from "../components/customer/CustomerSort";
 import type { CustomerStatusFilterValue } from "../components/customer/CustomerStatusFilter";
 
-import { customers } from "../features/customers/data/customers";
+import { getCustomers as fetchCustomers } from "../services/customer.service";
 
 const PAGE_SIZE = 2;
 
 export function useCustomers() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const {
+    data: customers = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["customers"],
+    queryFn: fetchCustomers,
+  });
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
   const [statusFilter, setStatusFilter] =
-    useState<CustomerStatusFilterValue>("All");
+    useState<CustomerStatusFilterValue>(
+      "All",
+    );
 
   const [sortBy, setSortBy] =
     useState<CustomerSortValue>("name");
@@ -32,7 +47,9 @@ export function useCustomers() {
         `${customer.firstName} ${customer.lastName}`.toLowerCase();
 
       const matchesSearch =
-        fullName.includes(normalizedSearch) ||
+        fullName.includes(
+          normalizedSearch,
+        ) ||
         customer.company
           .toLowerCase()
           .includes(normalizedSearch) ||
@@ -50,9 +67,13 @@ export function useCustomers() {
         statusFilter === "All" ||
         customer.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
     });
   }, [
+    customers,
     normalizedSearch,
     statusFilter,
   ]);
@@ -63,13 +84,17 @@ export function useCustomers() {
     switch (sortBy) {
       case "company":
         copy.sort((a, b) =>
-          a.company.localeCompare(b.company),
+          a.company.localeCompare(
+            b.company,
+          ),
         );
         break;
 
       case "created":
         copy.sort((a, b) =>
-          a.createdAt.localeCompare(b.createdAt),
+          a.createdAt.localeCompare(
+            b.createdAt,
+          ),
         );
         break;
 
@@ -91,21 +116,23 @@ export function useCustomers() {
     sortedCustomers.length / PAGE_SIZE,
   );
 
-  const paginatedCustomers = useMemo(() => {
-    const startIndex =
-      (currentPage - 1) * PAGE_SIZE;
+  const paginatedCustomers =
+    useMemo(() => {
+      const startIndex =
+        (currentPage - 1) *
+        PAGE_SIZE;
 
-    const endIndex =
-      startIndex + PAGE_SIZE;
+      const endIndex =
+        startIndex + PAGE_SIZE;
 
-    return sortedCustomers.slice(
-      startIndex,
-      endIndex,
-    );
-  }, [
-    currentPage,
-    sortedCustomers,
-  ]);
+      return sortedCustomers.slice(
+        startIndex,
+        endIndex,
+      );
+    }, [
+      currentPage,
+      sortedCustomers,
+    ]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -115,7 +142,25 @@ export function useCustomers() {
     sortBy,
   ]);
 
+  useEffect(() => {
+    if (
+      totalPages > 0 &&
+      currentPage > totalPages
+    ) {
+      setCurrentPage(totalPages);
+    }
+  }, [
+    currentPage,
+    totalPages,
+  ]);
+
   return {
+    customers,
+    isLoading,
+    isError,
+    error,
+    refetch,
+
     searchTerm,
     setSearchTerm,
 

@@ -1,3 +1,4 @@
+import cors from "cors";
 import express, {
   type Request,
   type Response,
@@ -5,6 +6,14 @@ import express, {
 import customerRoutes from "./routes/customer.routes.js";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
 
