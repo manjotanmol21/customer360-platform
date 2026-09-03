@@ -14,22 +14,34 @@ import {
   type UpdateCustomerInput,
 } from "../services/customer.service.js";
 
-export const getCustomers = (
+export const getCustomers = async (
   req: Request,
   res: Response,
-): void => {
-  const customers = getAllCustomers();
+): Promise<void> => {
+  try {
+    const customers = await getAllCustomers();
 
-  res.status(200).json({
-    success: true,
-    data: customers,
-  });
+    res.status(200).json({
+      success: true,
+      data: customers,
+    });
+  } catch (error) {
+    console.error(
+      "Failed to retrieve customers:",
+      error,
+    );
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to retrieve customers",
+    });
+  }
 };
 
-export const getCustomer = (
+export const getCustomer = async (
   req: Request,
   res: Response,
-): void => {
+): Promise<void> => {
   const customerId = Number(req.params.id);
 
   if (
@@ -45,28 +57,40 @@ export const getCustomer = (
     return;
   }
 
-  const customer =
-    getCustomerById(customerId);
+  try {
+    const customer =
+      await getCustomerById(customerId);
 
-  if (!customer) {
-    res.status(404).json({
-      success: false,
-      message: "Customer not found",
+    if (!customer) {
+      res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: customer,
     });
+  } catch (error) {
+    console.error(
+      `Failed to retrieve customer ${customerId}:`,
+      error,
+    );
 
-    return;
+    res.status(500).json({
+      success: false,
+      message: "Unable to retrieve customer",
+    });
   }
-
-  res.status(200).json({
-    success: true,
-    data: customer,
-  });
 };
 
-export const addCustomer = (
+export const addCustomer = async (
   req: Request,
   res: Response,
-): void => {
+): Promise<void> => {
   const {
     firstName,
     lastName,
@@ -102,25 +126,38 @@ export const addCustomer = (
     return;
   }
 
-  const newCustomer = createCustomer({
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: email.trim(),
-    phone: phone.trim(),
-    company: company.trim(),
-    status,
-  });
+  try {
+    const newCustomer =
+      await createCustomer({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        company: company.trim(),
+        status,
+      });
 
-  res.status(201).json({
-    success: true,
-    data: newCustomer,
-  });
+    res.status(201).json({
+      success: true,
+      data: newCustomer,
+    });
+  } catch (error) {
+    console.error(
+      "Failed to create customer:",
+      error,
+    );
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to create customer",
+    });
+  }
 };
 
-export const editCustomer = (
+export const editCustomer = async (
   req: Request,
   res: Response,
-): void => {
+): Promise<void> => {
   const customerId = Number(req.params.id);
 
   if (
@@ -171,37 +208,50 @@ export const editCustomer = (
     return;
   }
 
-  const updatedCustomer = updateCustomer(
-    customerId,
-    {
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      company: company.trim(),
-      status,
-    },
-  );
+  try {
+    const updatedCustomer =
+      await updateCustomer(
+        customerId,
+        {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          company: company.trim(),
+          status,
+        },
+      );
 
-  if (!updatedCustomer) {
-    res.status(404).json({
-      success: false,
-      message: "Customer not found",
+    if (!updatedCustomer) {
+      res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedCustomer,
     });
+  } catch (error) {
+    console.error(
+      `Failed to update customer ${customerId}:`,
+      error,
+    );
 
-    return;
+    res.status(500).json({
+      success: false,
+      message: "Unable to update customer",
+    });
   }
-
-  res.status(200).json({
-    success: true,
-    data: updatedCustomer,
-  });
 };
 
-export const removeCustomer = (
+export const removeCustomer = async (
   req: Request,
   res: Response,
-): void => {
+): Promise<void> => {
   const customerId = Number(req.params.id);
 
   if (
@@ -217,17 +267,29 @@ export const removeCustomer = (
     return;
   }
 
-  const deleted =
-    deleteCustomer(customerId);
+  try {
+    const deleted =
+      await deleteCustomer(customerId);
 
-  if (!deleted) {
-    res.status(404).json({
+    if (!deleted) {
+      res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+
+      return;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(
+      `Failed to delete customer ${customerId}:`,
+      error,
+    );
+
+    res.status(500).json({
       success: false,
-      message: "Customer not found",
+      message: "Unable to delete customer",
     });
-
-    return;
   }
-
-  res.status(204).send();
 };
