@@ -3,6 +3,8 @@ import express, {
   type Request,
   type Response,
 } from "express";
+
+import { errorHandler } from "./middleware/error.middleware.js";
 import customerRoutes from "./routes/customer.routes.js";
 
 const app = express();
@@ -25,5 +27,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 });
 
 app.use("/api/customers", customerRoutes);
+
+app.use(errorHandler);
 
 export default app;

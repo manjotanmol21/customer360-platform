@@ -1,5 +1,8 @@
 import { prisma } from "../lib/prisma.js";
-import { CustomerStatus as PrismaCustomerStatus } from "../generated/prisma/enums.js";
+import {
+  CustomerStatus as PrismaCustomerStatus,
+} from "../generated/prisma/enums.js";
+import { ConflictError } from "../errors/app.error.js";
 
 import type {
   CreateCustomerInput,
@@ -64,6 +67,17 @@ const mapCustomer = (
   };
 };
 
+const isPrismaUniqueConstraintError = (
+  error: unknown,
+): error is { code: string } => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
+  );
+};
+
 export const findAllCustomers = async (): Promise<Customer[]> => {
   const customers = await prisma.customer.findMany({
     orderBy: {
@@ -93,18 +107,28 @@ export const findCustomerById = async (
 export const insertCustomer = async (
   input: CreateCustomerInput,
 ): Promise<Customer> => {
-  const customer = await prisma.customer.create({
-    data: {
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
-      company: input.company,
-      status: toPrismaStatus(input.status),
-    },
-  });
+  try {
+    const customer = await prisma.customer.create({
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        company: input.company,
+        status: toPrismaStatus(input.status),
+      },
+    });
 
-  return mapCustomer(customer);
+    return mapCustomer(customer);
+  } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      throw new ConflictError(
+        "A customer with this email already exists",
+      );
+    }
+
+    throw error;
+  }
 };
 
 export const modifyCustomer = async (
@@ -122,21 +146,31 @@ export const modifyCustomer = async (
     return undefined;
   }
 
-  const customer = await prisma.customer.update({
-    where: {
-      id,
-    },
-    data: {
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
-      company: input.company,
-      status: toPrismaStatus(input.status),
-    },
-  });
+  try {
+    const customer = await prisma.customer.update({
+      where: {
+        id,
+      },
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        company: input.company,
+        status: toPrismaStatus(input.status),
+      },
+    });
 
-  return mapCustomer(customer);
+    return mapCustomer(customer);
+  } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      throw new ConflictError(
+        "A customer with this email already exists",
+      );
+    }
+
+    throw error;
+  }
 };
 
 export const removeCustomerById = async (

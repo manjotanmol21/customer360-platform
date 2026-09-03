@@ -4,6 +4,11 @@ import type {
 } from "express";
 
 import {
+  BadRequestError,
+  NotFoundError,
+} from "../errors/app.error.js";
+
+import {
   createCustomer,
   deleteCustomer,
   getAllCustomers,
@@ -14,77 +19,62 @@ import {
   type UpdateCustomerInput,
 } from "../services/customer.service.js";
 
+const parseCustomerId = (
+  id: string | string[] | undefined,
+): number => {
+  if (Array.isArray(id)) {
+    throw new BadRequestError(
+      "Customer ID must be a positive integer",
+    );
+  }
+
+  const customerId = Number(id);
+
+  if (
+    !Number.isInteger(customerId) ||
+    customerId <= 0
+  ) {
+    throw new BadRequestError(
+      "Customer ID must be a positive integer",
+    );
+  }
+
+  return customerId;
+};
+
 export const getCustomers = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  try {
-    const customers = await getAllCustomers();
+  const customers = await getAllCustomers();
 
-    res.status(200).json({
-      success: true,
-      data: customers,
-    });
-  } catch (error) {
-    console.error(
-      "Failed to retrieve customers:",
-      error,
-    );
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to retrieve customers",
-    });
-  }
+  res.status(200).json({
+    success: true,
+    data: customers,
+  });
 };
 
 export const getCustomer = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const customerId = Number(req.params.id);
+  const customerId = parseCustomerId(
+    req.params.id,
+  );
 
-  if (
-    !Number.isInteger(customerId) ||
-    customerId <= 0
-  ) {
-    res.status(400).json({
-      success: false,
-      message:
-        "Customer ID must be a positive integer",
-    });
+  const customer =
+    await getCustomerById(customerId);
 
-    return;
-  }
-
-  try {
-    const customer =
-      await getCustomerById(customerId);
-
-    if (!customer) {
-      res.status(404).json({
-        success: false,
-        message: "Customer not found",
-      });
-
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      data: customer,
-    });
-  } catch (error) {
-    console.error(
-      `Failed to retrieve customer ${customerId}:`,
-      error,
+  if (!customer) {
+    throw new NotFoundError(
+      "Customer not found",
     );
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to retrieve customer",
-    });
   }
+
+  res.status(200).json({
+    success: true,
+    data: customer,
+  });
 };
 
 export const addCustomer = async (
@@ -107,71 +97,40 @@ export const addCustomer = async (
     !phone?.trim() ||
     !company?.trim()
   ) {
-    res.status(400).json({
-      success: false,
-      message:
-        "First name, last name, email, phone and company are required",
-    });
-
-    return;
+    throw new BadRequestError(
+      "First name, last name, email, phone and company are required",
+    );
   }
 
   if (!isCustomerStatus(status)) {
-    res.status(400).json({
-      success: false,
-      message:
-        "Status must be Active, Pending or Inactive",
-    });
-
-    return;
-  }
-
-  try {
-    const newCustomer =
-      await createCustomer({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        company: company.trim(),
-        status,
-      });
-
-    res.status(201).json({
-      success: true,
-      data: newCustomer,
-    });
-  } catch (error) {
-    console.error(
-      "Failed to create customer:",
-      error,
+    throw new BadRequestError(
+      "Status must be Active, Pending or Inactive",
     );
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to create customer",
-    });
   }
+
+  const newCustomer =
+    await createCustomer({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      company: company.trim(),
+      status,
+    });
+
+  res.status(201).json({
+    success: true,
+    data: newCustomer,
+  });
 };
 
 export const editCustomer = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const customerId = Number(req.params.id);
-
-  if (
-    !Number.isInteger(customerId) ||
-    customerId <= 0
-  ) {
-    res.status(400).json({
-      success: false,
-      message:
-        "Customer ID must be a positive integer",
-    });
-
-    return;
-  }
+  const customerId = parseCustomerId(
+    req.params.id,
+  );
 
   const {
     firstName,
@@ -189,107 +148,58 @@ export const editCustomer = async (
     !phone?.trim() ||
     !company?.trim()
   ) {
-    res.status(400).json({
-      success: false,
-      message:
-        "First name, last name, email, phone and company are required",
-    });
-
-    return;
+    throw new BadRequestError(
+      "First name, last name, email, phone and company are required",
+    );
   }
 
   if (!isCustomerStatus(status)) {
-    res.status(400).json({
-      success: false,
-      message:
-        "Status must be Active, Pending or Inactive",
-    });
-
-    return;
+    throw new BadRequestError(
+      "Status must be Active, Pending or Inactive",
+    );
   }
 
-  try {
-    const updatedCustomer =
-      await updateCustomer(
-        customerId,
-        {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          company: company.trim(),
-          status,
-        },
-      );
-
-    if (!updatedCustomer) {
-      res.status(404).json({
-        success: false,
-        message: "Customer not found",
-      });
-
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      data: updatedCustomer,
-    });
-  } catch (error) {
-    console.error(
-      `Failed to update customer ${customerId}:`,
-      error,
+  const updatedCustomer =
+    await updateCustomer(
+      customerId,
+      {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        company: company.trim(),
+        status,
+      },
     );
 
-    res.status(500).json({
-      success: false,
-      message: "Unable to update customer",
-    });
+  if (!updatedCustomer) {
+    throw new NotFoundError(
+      "Customer not found",
+    );
   }
+
+  res.status(200).json({
+    success: true,
+    data: updatedCustomer,
+  });
 };
 
 export const removeCustomer = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const customerId = Number(req.params.id);
+  const customerId = parseCustomerId(
+    req.params.id,
+  );
 
-  if (
-    !Number.isInteger(customerId) ||
-    customerId <= 0
-  ) {
-    res.status(400).json({
-      success: false,
-      message:
-        "Customer ID must be a positive integer",
-    });
+  const deleted =
+    await deleteCustomer(customerId);
 
-    return;
-  }
-
-  try {
-    const deleted =
-      await deleteCustomer(customerId);
-
-    if (!deleted) {
-      res.status(404).json({
-        success: false,
-        message: "Customer not found",
-      });
-
-      return;
-    }
-
-    res.status(204).send();
-  } catch (error) {
-    console.error(
-      `Failed to delete customer ${customerId}:`,
-      error,
+  if (!deleted) {
+    throw new NotFoundError(
+      "Customer not found",
     );
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to delete customer",
-    });
   }
+
+  res.status(204).send();
 };
