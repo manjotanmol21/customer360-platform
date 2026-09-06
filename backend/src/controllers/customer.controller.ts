@@ -13,7 +13,6 @@ import {
   deleteCustomer,
   getAllCustomers,
   getCustomerById,
-  isCustomerStatus,
   updateCustomer,
   type CreateCustomerInput,
   type UpdateCustomerInput,
@@ -81,42 +80,11 @@ export const addCustomer = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const {
-    firstName,
-    lastName,
-    email,
-    phone,
-    company,
-    status,
-  } = req.body as Partial<CreateCustomerInput>;
-
-  if (
-    !firstName?.trim() ||
-    !lastName?.trim() ||
-    !email?.trim() ||
-    !phone?.trim() ||
-    !company?.trim()
-  ) {
-    throw new BadRequestError(
-      "First name, last name, email, phone and company are required",
-    );
-  }
-
-  if (!isCustomerStatus(status)) {
-    throw new BadRequestError(
-      "Status must be Active, Pending or Inactive",
-    );
-  }
+  const input =
+    req.body as CreateCustomerInput;
 
   const newCustomer =
-    await createCustomer({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      company: company.trim(),
-      status,
-    });
+    await createCustomer(input);
 
   res.status(201).json({
     success: true,
@@ -132,44 +100,13 @@ export const editCustomer = async (
     req.params.id,
   );
 
-  const {
-    firstName,
-    lastName,
-    email,
-    phone,
-    company,
-    status,
-  } = req.body as Partial<UpdateCustomerInput>;
-
-  if (
-    !firstName?.trim() ||
-    !lastName?.trim() ||
-    !email?.trim() ||
-    !phone?.trim() ||
-    !company?.trim()
-  ) {
-    throw new BadRequestError(
-      "First name, last name, email, phone and company are required",
-    );
-  }
-
-  if (!isCustomerStatus(status)) {
-    throw new BadRequestError(
-      "Status must be Active, Pending or Inactive",
-    );
-  }
+  const input =
+    req.body as UpdateCustomerInput;
 
   const updatedCustomer =
     await updateCustomer(
       customerId,
-      {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        company: company.trim(),
-        status,
-      },
+      input,
     );
 
   if (!updatedCustomer) {
