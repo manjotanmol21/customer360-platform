@@ -4,7 +4,9 @@ import type {
 } from "express";
 
 import {
+  loginUser,
   registerUser,
+  type LoginUserInput,
   type RegisterUserInput,
 } from "../services/auth.service.js";
 
@@ -19,6 +21,22 @@ export const register = async (
     await registerUser(input);
 
   res.status(201).json({
+    success: true,
+    data: user,
+  });
+};
+
+export const login = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const input =
+    req.body as LoginUserInput;
+
+  const user =
+    await loginUser(input);
+
+  res.status(200).json({
     success: true,
     data: user,
   });

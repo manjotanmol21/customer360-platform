@@ -1,11 +1,24 @@
-import { ConflictError } from "../errors/app.error.js";
+import {
+  ConflictError,
+  UnauthorizedError,
+} from "../errors/app.error.js";
+
 import {
   createUserRecord,
   findUserByEmail,
 } from "../repositories/user.repository.js";
-import { hashPassword } from "../lib/password.js";
+
+import {
+  hashPassword,
+  verifyPassword,
+} from "../lib/password.js";
 
 export interface RegisterUserInput {
+  email: string;
+  password: string;
+}
+
+export interface LoginUserInput {
   email: string;
   password: string;
 }
@@ -39,6 +52,43 @@ export const registerUser = async (
     email: normalizedEmail,
     passwordHash,
   });
+
+  return {
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt
+      .toISOString()
+      .slice(0, 10),
+  };
+};
+
+export const loginUser = async (
+  input: LoginUserInput,
+): Promise<AuthUser> => {
+  const normalizedEmail = input.email
+    .trim()
+    .toLowerCase();
+
+  const user =
+    await findUserByEmail(normalizedEmail);
+
+  if (!user) {
+    throw new UnauthorizedError(
+      "Invalid email or password",
+    );
+  }
+
+  const passwordMatches =
+    await verifyPassword(
+      input.password,
+      user.passwordHash,
+    );
+
+  if (!passwordMatches) {
+    throw new UnauthorizedError(
+      "Invalid email or password",
+    );
+  }
 
   return {
     id: user.id,
