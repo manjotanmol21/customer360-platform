@@ -21,6 +21,16 @@ model Customer {
   @@map("customers")
 }
 
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
 enum CustomerStatus {
   ACTIVE
   INACTIVE
