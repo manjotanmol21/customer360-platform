@@ -33,11 +33,11 @@ export const login = async (
   const input =
     req.body as LoginUserInput;
 
-  const user =
+  const result =
     await loginUser(input);
 
   res.status(200).json({
     success: true,
-    data: user,
+    data: result,
   });
 };
