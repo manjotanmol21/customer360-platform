@@ -13,6 +13,10 @@ import {
   verifyPassword,
 } from "../lib/password.js";
 
+import {
+  createAccessToken,
+} from "../lib/jwt.js";
+
 export interface RegisterUserInput {
   email: string;
   password: string;
@@ -27,6 +31,11 @@ export interface AuthUser {
   id: number;
   email: string;
   createdAt: string;
+}
+
+export interface LoginResult {
+  user: AuthUser;
+  accessToken: string;
 }
 
 export const registerUser = async (
@@ -64,7 +73,7 @@ export const registerUser = async (
 
 export const loginUser = async (
   input: LoginUserInput,
-): Promise<AuthUser> => {
+): Promise<LoginResult> => {
   const normalizedEmail = input.email
     .trim()
     .toLowerCase();
@@ -90,11 +99,22 @@ export const loginUser = async (
     );
   }
 
-  return {
+  const authUser: AuthUser = {
     id: user.id,
     email: user.email,
     createdAt: user.createdAt
       .toISOString()
       .slice(0, 10),
+  };
+
+  const accessToken =
+    createAccessToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+  return {
+    user: authUser,
+    accessToken,
   };
 };
