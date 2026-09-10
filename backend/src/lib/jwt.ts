@@ -32,8 +32,10 @@ export const createAccessToken = (
   input: CreateAccessTokenInput,
 ): string => {
   const options: SignOptions = {
+    algorithm: "HS256",
     expiresIn:
       JWT_EXPIRES_IN as SignOptions["expiresIn"],
+    subject: input.userId.toString(),
   };
 
   return jwt.sign(
@@ -41,9 +43,30 @@ export const createAccessToken = (
       email: input.email,
     },
     jwtSecret,
+    options,
+  );
+};
+
+export const verifyAccessToken = (
+  token: string,
+): AccessTokenPayload => {
+  const payload = jwt.verify(
+    token,
+    jwtSecret,
     {
-      ...options,
-      subject: input.userId.toString(),
+      algorithms: ["HS256"],
     },
   );
+
+  if (
+    typeof payload === "string" ||
+    !payload.sub ||
+    typeof payload.email !== "string"
+  ) {
+    throw new Error(
+      "Invalid access token payload",
+    );
+  }
+
+  return payload as AccessTokenPayload;
 };

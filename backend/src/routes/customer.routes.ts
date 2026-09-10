@@ -8,10 +8,13 @@ import {
   removeCustomer,
 } from "../controllers/customer.controller.js";
 
+import { authenticate } from "../middleware/auth.middleware.js";
 import { validateBody } from "../middleware/validate.middleware.js";
 import { customerBodySchema } from "../schemas/customer.schema.js";
 
 const router = Router();
+
+router.use(authenticate);
 
 router.get("/", getCustomers);
 
