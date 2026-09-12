@@ -4,6 +4,8 @@ import {
   Routes,
 } from "react-router-dom";
 
+import { useAuth } from "./context/AuthContext";
+
 import MainLayout from "./layout/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import CustomerCreatePage from "./pages/customer/CustomerCreatePage";
@@ -15,10 +17,9 @@ import SettingsPage from "./pages/settings/SettingsPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function RootRedirect() {
-  const isAuthenticated =
-    sessionStorage.getItem(
-      "customer360_authenticated",
-    ) === "true";
+  const {
+    isAuthenticated,
+  } = useAuth();
 
   return (
     <Navigate

@@ -1,14 +1,32 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import {
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  NavLink,
+  useNavigate,
+} from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
-  // console.log("SIDEBAR COMPONENT IS RENDERING");
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const queryClient = useQueryClient();
+
+  const {
+    logout,
+  } = useAuth();
 
   function handleLogout() {
     logout();
-    navigate("/login", { replace: true });
+
+    queryClient.clear();
+
+    navigate(
+      "/login",
+      {
+        replace: true,
+      },
+    );
   }
 
   return (
@@ -23,20 +41,41 @@ export default function Sidebar() {
         flexDirection: "column",
       }}
     >
-      <h1 style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "30px" }}>
+      <h1
+        style={{
+          fontSize: "22px",
+          fontWeight: "bold",
+          marginBottom: "30px",
+        }}
+      >
         Customer360
       </h1>
 
-      <nav style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <NavLink to="/dashboard" style={{ color: "white" }}>
+      <nav
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        <NavLink
+          to="/dashboard"
+          style={{ color: "white" }}
+        >
           Dashboard
         </NavLink>
 
-        <NavLink to="/customers" style={{ color: "white" }}>
+        <NavLink
+          to="/customers"
+          style={{ color: "white" }}
+        >
           Customers
         </NavLink>
 
-        <NavLink to="/settings" style={{ color: "white" }}>
+        <NavLink
+          to="/settings"
+          style={{ color: "white" }}
+        >
           Settings
         </NavLink>
 
