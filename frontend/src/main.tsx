@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   QueryClient,
   QueryClientProvider,
@@ -14,7 +15,18 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      retry: 1,
+
+      retry: (failureCount, error) => {
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 401
+        ) {
+          return false;
+        }
+
+        return failureCount < 1;
+      },
+
       refetchOnWindowFocus: false,
     },
   },

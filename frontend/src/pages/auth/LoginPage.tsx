@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 
 import PasswordInput from "../../components/auth/PasswordInput";
 import Button from "../../components/UI/Button";
@@ -15,18 +20,21 @@ import loginSchema, {
   type LoginFormValues,
 } from "../../features/auth/schemas/loginSchema";
 
-const DEMO_EMAIL = "admin@customer360.com";
-const DEMO_PASSWORD = "Password123!";
+interface LoginLocationState {
+  from?: string;
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     login,
     isAuthenticated,
   } = useAuth();
 
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] =
+    useState("");
 
   const {
     register,
@@ -57,30 +65,40 @@ export default function LoginPage() {
   ) {
     setLoginError("");
 
-    await new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 800);
-    });
+    try {
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
 
-    const normalizedEmail =
-      formData.email.trim().toLowerCase();
+      const state =
+        location.state as
+          | LoginLocationState
+          | null;
 
-    const credentialsAreValid =
-      normalizedEmail === DEMO_EMAIL &&
-      formData.password === DEMO_PASSWORD;
-
-    if (!credentialsAreValid) {
-      setLoginError(
-        "The email address or password is incorrect. Please try again.",
+      navigate(
+        state?.from ?? "/dashboard",
+        {
+          replace: true,
+        },
       );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message =
+          error.response?.data?.message;
 
-      return;
+        if (
+          typeof message === "string"
+        ) {
+          setLoginError(message);
+          return;
+        }
+      }
+
+      setLoginError(
+        "Unable to sign in. Please try again.",
+      );
     }
-
-    login();
-
-    navigate("/dashboard", {
-      replace: true,
-    });
   }
 
   return (
@@ -146,7 +164,9 @@ export default function LoginPage() {
               placeholder="Enter your password"
               disabled={isSubmitting}
               required
-              error={errors.password?.message}
+              error={
+                errors.password?.message
+              }
               {...register("password")}
             />
 
@@ -161,26 +181,6 @@ export default function LoginPage() {
             </Button>
           </div>
         </form>
-
-        <aside className="mt-8 rounded-lg border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm font-semibold text-blue-950">
-            Demo account
-          </p>
-
-          <p className="mt-2 text-sm text-blue-900">
-            Email:{" "}
-            <span className="font-medium">
-              admin@customer360.com
-            </span>
-          </p>
-
-          <p className="mt-1 text-sm text-blue-900">
-            Password:{" "}
-            <span className="font-medium">
-              Password123!
-            </span>
-          </p>
-        </aside>
       </Card>
     </main>
   );

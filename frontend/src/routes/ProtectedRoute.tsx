@@ -4,6 +4,8 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import { useAuth } from "../context/AuthContext";
+
 interface ProtectedRouteProps {
   children: ReactNode;
 }
@@ -13,17 +15,18 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const location = useLocation();
 
-  const isAuthenticated =
-    sessionStorage.getItem(
-      "customer360_authenticated",
-    ) === "true";
+  const {
+    isAuthenticated,
+  } = useAuth();
 
   if (!isAuthenticated) {
     return (
       <Navigate
         to="/login"
         replace
-        state={{ from: location.pathname }}
+        state={{
+          from: location.pathname,
+        }}
       />
     );
   }
