@@ -12,9 +12,14 @@ import {
   verifyAccessToken,
 } from "../lib/jwt.js";
 
+import type {
+  UserRole,
+} from "../generated/prisma/enums.js";
+
 export interface AuthenticatedUser {
   id: number;
   email: string;
+  role: UserRole;
 }
 
 export interface AuthenticatedRequest
@@ -67,6 +72,7 @@ export const authenticate = (
     req.user = {
       id: userId,
       email: payload.email,
+      role: payload.role,
     };
 
     next();

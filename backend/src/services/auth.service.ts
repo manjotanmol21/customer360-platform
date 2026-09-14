@@ -17,6 +17,10 @@ import {
   createAccessToken,
 } from "../lib/jwt.js";
 
+import type {
+  UserRole,
+} from "../generated/prisma/enums.js";
+
 export interface RegisterUserInput {
   email: string;
   password: string;
@@ -30,6 +34,7 @@ export interface LoginUserInput {
 export interface AuthUser {
   id: number;
   email: string;
+  role: UserRole;
   createdAt: string;
 }
 
@@ -65,6 +70,7 @@ export const registerUser = async (
   return {
     id: user.id,
     email: user.email,
+    role: user.role,
     createdAt: user.createdAt
       .toISOString()
       .slice(0, 10),
@@ -102,6 +108,7 @@ export const loginUser = async (
   const authUser: AuthUser = {
     id: user.id,
     email: user.email,
+    role: user.role,
     createdAt: user.createdAt
       .toISOString()
       .slice(0, 10),
@@ -111,6 +118,7 @@ export const loginUser = async (
     createAccessToken({
       userId: user.id,
       email: user.email,
+      role: user.role,
     });
 
   return {

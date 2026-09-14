@@ -5,6 +5,10 @@ import jwt, {
   type SignOptions,
 } from "jsonwebtoken";
 
+import {
+  UserRole,
+} from "../generated/prisma/enums.js";
+
 const jwtSecret =
   process.env.JWT_SECRET;
 
@@ -21,11 +25,13 @@ export interface AccessTokenPayload
   extends JwtPayload {
   sub: string;
   email: string;
+  role: UserRole;
 }
 
 export interface CreateAccessTokenInput {
   userId: number;
   email: string;
+  role: UserRole;
 }
 
 export const createAccessToken = (
@@ -41,6 +47,7 @@ export const createAccessToken = (
   return jwt.sign(
     {
       email: input.email,
+      role: input.role,
     },
     jwtSecret,
     options,
@@ -61,7 +68,10 @@ export const verifyAccessToken = (
   if (
     typeof payload === "string" ||
     !payload.sub ||
-    typeof payload.email !== "string"
+    typeof payload.email !== "string" ||
+    !Object.values(UserRole).includes(
+      payload.role as UserRole,
+    )
   ) {
     throw new Error(
       "Invalid access token payload",
