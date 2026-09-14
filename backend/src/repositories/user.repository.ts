@@ -1,9 +1,14 @@
 import { prisma } from "../lib/prisma.js";
 
+import type {
+  UserRole,
+} from "../generated/prisma/enums.js";
+
 export interface UserRecord {
   id: number;
   email: string;
   passwordHash: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
