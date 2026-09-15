@@ -12,6 +12,8 @@ import CustomerTableLoading from "../../components/customer/CustomerTableLoading
 import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
 
+import { useAuth } from "../../context/AuthContext";
+
 import {
   useCustomer,
   useDeleteCustomer,
@@ -20,6 +22,10 @@ import {
 export default function CustomerDetailsPage() {
   const { customerId } = useParams();
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
+
+  const isAdmin =
+    hasRole("ADMIN");
 
   const customerIdNumber =
     Number(customerId);
@@ -172,25 +178,27 @@ export default function CustomerDetailsPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="secondary"
-                onClick={
-                  handleEditCustomer
-                }
-              >
-                Edit Customer
-              </Button>
+            {isAdmin && (
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={
+                    handleEditCustomer
+                  }
+                >
+                  Edit Customer
+                </Button>
 
-              <Button
-                variant="danger"
-                onClick={
-                  handleOpenDeleteModal
-                }
-              >
-                Delete Customer
-              </Button>
-            </div>
+                <Button
+                  variant="danger"
+                  onClick={
+                    handleOpenDeleteModal
+                  }
+                >
+                  Delete Customer
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -269,19 +277,21 @@ export default function CustomerDetailsPage() {
         </div>
       </section>
 
-      <CustomerDeleteModal
-        customerName={`${customer.firstName} ${customer.lastName}`}
-        isOpen={isDeleteModalOpen}
-        isDeleting={
-          deleteCustomerMutation.isPending
-        }
-        onCancel={
-          handleCloseDeleteModal
-        }
-        onConfirm={
-          handleConfirmDelete
-        }
-      />
+      {isAdmin && (
+        <CustomerDeleteModal
+          customerName={`${customer.firstName} ${customer.lastName}`}
+          isOpen={isDeleteModalOpen}
+          isDeleting={
+            deleteCustomerMutation.isPending
+          }
+          onCancel={
+            handleCloseDeleteModal
+          }
+          onConfirm={
+            handleConfirmDelete
+          }
+        />
+      )}
     </>
   );
 }

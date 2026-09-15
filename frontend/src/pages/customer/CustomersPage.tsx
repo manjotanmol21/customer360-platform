@@ -11,9 +11,12 @@ import CustomerTableLoading from "../../components/customer/CustomerTableLoading
 import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
 
+import { useAuth } from "../../context/AuthContext";
 import { useCustomers } from "../../hooks/useCustomers";
 
 export default function CustomersPage() {
+  const { hasRole } = useAuth();
+
   const {
     isLoading,
     isError,
@@ -38,6 +41,9 @@ export default function CustomersPage() {
 
   const hasCustomers =
     sortedCustomers.length > 0;
+
+  const isAdmin =
+    hasRole("ADMIN");
 
   function handleRetry() {
     void refetch();
@@ -109,11 +115,13 @@ export default function CustomersPage() {
           </p>
         </div>
 
-        <Link to="/customers/new">
-          <Button>
-            Add Customer
-          </Button>
-        </Link>
+        {isAdmin && (
+          <Link to="/customers/new">
+            <Button>
+              Add Customer
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Card
