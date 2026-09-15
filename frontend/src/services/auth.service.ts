@@ -1,8 +1,13 @@
 import apiClient from "../api/apiClient";
 
+export type UserRole =
+  | "ADMIN"
+  | "VIEWER";
+
 export interface AuthUser {
   id: number;
   email: string;
+  role: UserRole;
   createdAt: string;
 }
 

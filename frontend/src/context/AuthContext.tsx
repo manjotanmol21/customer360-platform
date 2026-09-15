@@ -10,12 +10,16 @@ import {
   loginUser,
   type AuthUser,
   type LoginCredentials,
+  type UserRole,
 } from "../services/auth.service";
 
 interface AuthContextValue {
   user: AuthUser | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  hasRole: (
+    ...roles: UserRole[]
+  ) => boolean;
   login: (
     credentials: LoginCredentials,
   ) => Promise<void>;
@@ -106,6 +110,16 @@ export function AuthProvider({
     setUser(null);
   }
 
+  function hasRole(
+    ...roles: UserRole[]
+  ): boolean {
+    if (!user) {
+      return false;
+    }
+
+    return roles.includes(user.role);
+  }
+
   const isAuthenticated =
     Boolean(accessToken);
 
@@ -114,6 +128,7 @@ export function AuthProvider({
       user,
       accessToken,
       isAuthenticated,
+      hasRole,
       login,
       logout,
     }),

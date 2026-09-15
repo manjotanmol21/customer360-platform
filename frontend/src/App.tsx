@@ -14,7 +14,9 @@ import CustomerEditPage from "./pages/customer/CustomerEditPage";
 import CustomersPage from "./pages/customer/CustomersPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import SettingsPage from "./pages/settings/SettingsPage";
+
 import ProtectedRoute from "./routes/ProtectedRoute";
+import RoleRoute from "./routes/RoleRoute";
 
 function RootRedirect() {
   const {
@@ -75,7 +77,13 @@ export default function App() {
 
         <Route
           path="new"
-          element={<CustomerCreatePage />}
+          element={
+            <RoleRoute
+              allowedRoles={["ADMIN"]}
+            >
+              <CustomerCreatePage />
+            </RoleRoute>
+          }
         />
 
         <Route
@@ -85,7 +93,13 @@ export default function App() {
 
         <Route
           path=":customerId/edit"
-          element={<CustomerEditPage />}
+          element={
+            <RoleRoute
+              allowedRoles={["ADMIN"]}
+            >
+              <CustomerEditPage />
+            </RoleRoute>
+          }
         />
       </Route>
 
