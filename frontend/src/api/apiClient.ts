@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const ACCESS_TOKEN_STORAGE_KEY =
-  "customer360_access_token";
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  AUTH_SESSION_EXPIRED_EVENT,
+} from "../constants/auth.constants";
 
 const apiClient = axios.create({
   baseURL:
@@ -28,6 +30,33 @@ apiClient.interceptors.request.use(
     }
 
     return config;
+  },
+);
+
+apiClient.interceptors.response.use(
+  (response) => response,
+
+  (error: unknown) => {
+    const hasStoredAccessToken =
+      Boolean(
+        sessionStorage.getItem(
+          ACCESS_TOKEN_STORAGE_KEY,
+        ),
+      );
+
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      hasStoredAccessToken
+    ) {
+      window.dispatchEvent(
+        new Event(
+          AUTH_SESSION_EXPIRED_EVENT,
+        ),
+      );
+    }
+
+    return Promise.reject(error);
   },
 );
 

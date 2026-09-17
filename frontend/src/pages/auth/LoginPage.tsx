@@ -1,12 +1,20 @@
 import { useState } from "react";
+
+import axios from "axios";
+
+import {
+  zodResolver,
+} from "@hookform/resolvers/zod";
+
+import {
+  useForm,
+} from "react-hook-form";
+
 import {
   Navigate,
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import PasswordInput from "../../components/auth/PasswordInput";
 import Button from "../../components/UI/Button";
@@ -14,7 +22,9 @@ import Card from "../../components/UI/Card";
 import Input from "../../components/UI/Input";
 import Label from "../../components/UI/Label";
 
-import { useAuth } from "../../context/AuthContext";
+import {
+  useAuth,
+} from "../../context/AuthContext";
 
 import loginSchema, {
   type LoginFormValues,
@@ -31,6 +41,7 @@ export default function LoginPage() {
   const {
     login,
     isAuthenticated,
+    sessionExpired,
   } = useAuth();
 
   const [loginError, setLoginError] =
@@ -45,6 +56,7 @@ export default function LoginPage() {
     },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+
     defaultValues: {
       email: "",
       password: "",
@@ -118,9 +130,20 @@ export default function LoginPage() {
           </h1>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Enter your account details to continue to the dashboard.
+            Enter your account details to
+            continue to the dashboard.
           </p>
         </header>
+
+        {sessionExpired && (
+          <div
+            className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+            role="alert"
+          >
+            Your session has expired. Please
+            sign in again to continue.
+          </div>
+        )}
 
         {loginError && (
           <div

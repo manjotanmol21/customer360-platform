@@ -1,10 +1,22 @@
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+
+import {
+  useQueryClient,
+} from "@tanstack/react-query";
+
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  AUTH_SESSION_EXPIRED_EVENT,
+  AUTH_USER_STORAGE_KEY,
+} from "../constants/auth.constants";
 
 import {
   loginUser,
@@ -17,24 +29,22 @@ interface AuthContextValue {
   user: AuthUser | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  sessionExpired: boolean;
+
   hasRole: (
     ...roles: UserRole[]
   ) => boolean;
+
   login: (
     credentials: LoginCredentials,
   ) => Promise<void>;
+
   logout: () => void;
 }
 
 interface AuthProviderProps {
   children: ReactNode;
 }
-
-const ACCESS_TOKEN_STORAGE_KEY =
-  "customer360_access_token";
-
-const AUTH_USER_STORAGE_KEY =
-  "customer360_auth_user";
 
 const AuthContext =
   createContext<AuthContextValue | undefined>(
@@ -52,7 +62,9 @@ function getStoredUser(): AuthUser | null {
   }
 
   try {
-    return JSON.parse(storedUser) as AuthUser;
+    return JSON.parse(
+      storedUser,
+    ) as AuthUser;
   } catch {
     sessionStorage.removeItem(
       AUTH_USER_STORAGE_KEY,
@@ -65,6 +77,8 @@ function getStoredUser(): AuthUser | null {
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
+  const queryClient = useQueryClient();
+
   const [accessToken, setAccessToken] =
     useState<string | null>(() => {
       return sessionStorage.getItem(
@@ -77,57 +91,96 @@ export function AuthProvider({
       return getStoredUser();
     });
 
-  async function login(
-    credentials: LoginCredentials,
-  ): Promise<void> {
-    const result =
-      await loginUser(credentials);
+  const [
+    sessionExpired,
+    setSessionExpired,
+  ] = useState(false);
 
-    sessionStorage.setItem(
-      ACCESS_TOKEN_STORAGE_KEY,
-      result.accessToken,
-    );
+  const clearAuthSession =
+    useCallback((): void => {
+      sessionStorage.removeItem(
+        ACCESS_TOKEN_STORAGE_KEY,
+      );
 
-    sessionStorage.setItem(
-      AUTH_USER_STORAGE_KEY,
-      JSON.stringify(result.user),
-    );
+      sessionStorage.removeItem(
+        AUTH_USER_STORAGE_KEY,
+      );
 
-    setAccessToken(result.accessToken);
-    setUser(result.user);
-  }
+      setAccessToken(null);
+      setUser(null);
 
-  function logout(): void {
-    sessionStorage.removeItem(
-      ACCESS_TOKEN_STORAGE_KEY,
-    );
+      queryClient.clear();
+    }, [queryClient]);
 
-    sessionStorage.removeItem(
-      AUTH_USER_STORAGE_KEY,
-    );
+  const login = useCallback(
+    async (
+      credentials: LoginCredentials,
+    ): Promise<void> => {
+      const result =
+        await loginUser(credentials);
 
-    setAccessToken(null);
-    setUser(null);
-  }
+      sessionStorage.setItem(
+        ACCESS_TOKEN_STORAGE_KEY,
+        result.accessToken,
+      );
 
-  function hasRole(
-    ...roles: UserRole[]
-  ): boolean {
-    if (!user) {
-      return false;
+      sessionStorage.setItem(
+        AUTH_USER_STORAGE_KEY,
+        JSON.stringify(result.user),
+      );
+
+      setAccessToken(result.accessToken);
+      setUser(result.user);
+      setSessionExpired(false);
+    },
+    [],
+  );
+
+  const logout =
+    useCallback((): void => {
+      clearAuthSession();
+      setSessionExpired(false);
+    }, [clearAuthSession]);
+
+  useEffect(() => {
+    function handleSessionExpired(): void {
+      clearAuthSession();
+      setSessionExpired(true);
     }
 
-    return roles.includes(user.role);
-  }
+    window.addEventListener(
+      AUTH_SESSION_EXPIRED_EVENT,
+      handleSessionExpired,
+    );
+
+    return () => {
+      window.removeEventListener(
+        AUTH_SESSION_EXPIRED_EVENT,
+        handleSessionExpired,
+      );
+    };
+  }, [clearAuthSession]);
+
+  const hasRole = useCallback(
+    (...roles: UserRole[]): boolean => {
+      if (!user) {
+        return false;
+      }
+
+      return roles.includes(user.role);
+    },
+    [user],
+  );
 
   const isAuthenticated =
-    Boolean(accessToken);
+    Boolean(accessToken && user);
 
   const value = useMemo(
     () => ({
       user,
       accessToken,
       isAuthenticated,
+      sessionExpired,
       hasRole,
       login,
       logout,
@@ -136,6 +189,10 @@ export function AuthProvider({
       user,
       accessToken,
       isAuthenticated,
+      sessionExpired,
+      hasRole,
+      login,
+      logout,
     ],
   );
 

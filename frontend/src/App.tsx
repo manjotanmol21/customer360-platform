@@ -7,12 +7,16 @@ import {
 import { useAuth } from "./context/AuthContext";
 
 import MainLayout from "./layout/MainLayout";
+
 import LoginPage from "./pages/auth/LoginPage";
+
 import CustomerCreatePage from "./pages/customer/CustomerCreatePage";
 import CustomerDetailsPage from "./pages/customer/CustomerDetailsPage";
 import CustomerEditPage from "./pages/customer/CustomerEditPage";
 import CustomersPage from "./pages/customer/CustomersPage";
+
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import ForbiddenPage from "./pages/errors/ForbiddenPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -114,6 +118,20 @@ export default function App() {
         <Route
           index
           element={<SettingsPage />}
+        />
+      </Route>
+
+      <Route
+        path="/forbidden"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          index
+          element={<ForbiddenPage />}
         />
       </Route>
 

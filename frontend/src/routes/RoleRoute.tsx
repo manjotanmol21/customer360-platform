@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import {
   Navigate,
   useLocation,
@@ -10,7 +12,7 @@ import type {
 } from "../services/auth.service";
 
 interface RoleRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
   allowedRoles: UserRole[];
 }
 
@@ -18,20 +20,33 @@ export default function RoleRoute({
   children,
   allowedRoles,
 }: RoleRouteProps) {
-  const { hasRole } = useAuth();
   const location = useLocation();
 
-  const isAllowed =
-    hasRole(...allowedRoles);
+  const {
+    isAuthenticated,
+    hasRole,
+  } = useAuth();
 
-  if (!isAllowed) {
+  if (!isAuthenticated) {
     return (
       <Navigate
-        to="/customers"
+        to="/login"
+        replace
         state={{
           from: location.pathname,
         }}
+      />
+    );
+  }
+
+  if (!hasRole(...allowedRoles)) {
+    return (
+      <Navigate
+        to="/forbidden"
         replace
+        state={{
+          from: location.pathname,
+        }}
       />
     );
   }
