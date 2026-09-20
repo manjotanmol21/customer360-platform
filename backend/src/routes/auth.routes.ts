@@ -5,7 +5,13 @@ import {
   register,
 } from "../controllers/auth.controller.js";
 
-import { validateBody } from "../middleware/validate.middleware.js";
+import {
+  authRateLimiter,
+} from "../middleware/rate-limit.middleware.js";
+
+import {
+  validateBody,
+} from "../middleware/validate.middleware.js";
 
 import {
   loginUserSchema,
@@ -22,6 +28,7 @@ router.post(
 
 router.post(
   "/login",
+  authRateLimiter,
   validateBody(loginUserSchema),
   login,
 );
