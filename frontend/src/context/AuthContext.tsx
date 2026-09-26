@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -25,31 +23,13 @@ import {
   type UserRole,
 } from "../services/auth.service";
 
-interface AuthContextValue {
-  user: AuthUser | null;
-  accessToken: string | null;
-  isAuthenticated: boolean;
-  sessionExpired: boolean;
-
-  hasRole: (
-    ...roles: UserRole[]
-  ) => boolean;
-
-  login: (
-    credentials: LoginCredentials,
-  ) => Promise<void>;
-
-  logout: () => void;
-}
+import {
+  AuthContext,
+} from "./auth-context";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
-
-const AuthContext =
-  createContext<AuthContextValue | undefined>(
-    undefined,
-  );
 
 function getStoredUser(): AuthUser | null {
   const storedUser =
@@ -201,17 +181,4 @@ export function AuthProvider({
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context =
-    useContext(AuthContext);
-
-  if (context === undefined) {
-    throw new Error(
-      "useAuth must be used inside an AuthProvider.",
-    );
-  }
-
-  return context;
 }

@@ -24,7 +24,7 @@ import Label from "../../components/UI/Label";
 
 import {
   useAuth,
-} from "../../context/AuthContext";
+} from "../../hooks/useAuth";
 
 import loginSchema, {
   type LoginFormValues,
