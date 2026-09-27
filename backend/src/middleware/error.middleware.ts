@@ -27,7 +27,7 @@ export const errorHandler:
     error,
     req,
     res,
-    next,
+    _next,
   ) => {
     if (error instanceof AppError) {
       res

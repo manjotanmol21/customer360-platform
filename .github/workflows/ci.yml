@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   backend-quality-gate:
-    name: Backend — Build and Integration Tests
+    name: Backend - Lint, Build, Test and Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -68,6 +68,9 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
+      - name: Lint backend
+        run: npm run lint
+
       - name: Generate Prisma client
         run: npx prisma generate
 
@@ -77,11 +80,20 @@ jobs:
       - name: Build backend
         run: npm run build
 
-      - name: Run backend integration tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload backend coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
+          if-no-files-found: warn
+          retention-days: 7
 
   frontend-quality-gate:
-    name: Frontend — Lint and Build
+    name: Frontend - Lint and Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
