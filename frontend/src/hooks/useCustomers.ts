@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -24,19 +23,24 @@ export function useCustomers() {
     queryFn: fetchCustomers,
   });
 
-  const [searchTerm, setSearchTerm] =
+  const [searchTerm, setSearchTermState] =
     useState("");
 
-  const [statusFilter, setStatusFilter] =
+  const [
+    statusFilter,
+    setStatusFilterState,
+  ] =
     useState<CustomerStatusFilterValue>(
       "All",
     );
 
-  const [sortBy, setSortBy] =
+  const [sortBy, setSortByState] =
     useState<CustomerSortValue>("name");
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
+  const [
+    requestedPage,
+    setRequestedPage,
+  ] = useState(1);
 
   const normalizedSearch =
     searchTerm.trim().toLowerCase();
@@ -116,6 +120,11 @@ export function useCustomers() {
     sortedCustomers.length / PAGE_SIZE,
   );
 
+  const currentPage = Math.min(
+    requestedPage,
+    Math.max(totalPages, 1),
+  );
+
   const paginatedCustomers =
     useMemo(() => {
       const startIndex =
@@ -134,25 +143,40 @@ export function useCustomers() {
       sortedCustomers,
     ]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    searchTerm,
-    statusFilter,
-    sortBy,
-  ]);
+  function setSearchTerm(
+    value: string,
+  ): void {
+    setSearchTermState(value);
+    setRequestedPage(1);
+  }
 
-  useEffect(() => {
-    if (
-      totalPages > 0 &&
-      currentPage > totalPages
-    ) {
-      setCurrentPage(totalPages);
-    }
-  }, [
-    currentPage,
-    totalPages,
-  ]);
+  function setStatusFilter(
+    value: CustomerStatusFilterValue,
+  ): void {
+    setStatusFilterState(value);
+    setRequestedPage(1);
+  }
+
+  function setSortBy(
+    value: CustomerSortValue,
+  ): void {
+    setSortByState(value);
+    setRequestedPage(1);
+  }
+
+  function setCurrentPage(
+    page: number,
+  ): void {
+    const lastAvailablePage =
+      Math.max(totalPages, 1);
+
+    const safePage = Math.min(
+      Math.max(page, 1),
+      lastAvailablePage,
+    );
+
+    setRequestedPage(safePage);
+  }
 
   return {
     customers,

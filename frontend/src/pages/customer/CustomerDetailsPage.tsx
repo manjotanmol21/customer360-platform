@@ -12,7 +12,7 @@ import CustomerTableLoading from "../../components/customer/CustomerTableLoading
 import Button from "../../components/UI/Button";
 import Card from "../../components/UI/Card";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 
 import {
   useCustomer,

@@ -8,15 +8,20 @@ import {
   config,
 } from "dotenv";
 
-const dotenvResult = config({
-  path: ".env.test",
-  override: true,
-});
+const isContinuousIntegration =
+  process.env.CI === "true";
 
-if (dotenvResult.error) {
-  throw new Error(
-    "Unable to load backend/.env.test.",
-  );
+if (!isContinuousIntegration) {
+  const dotenvResult = config({
+    path: ".env.test",
+    override: true,
+  });
+
+  if (dotenvResult.error) {
+    throw new Error(
+      "Unable to load backend/.env.test.",
+    );
+  }
 }
 
 const databaseUrl =
@@ -24,7 +29,9 @@ const databaseUrl =
 
 if (!databaseUrl) {
   throw new Error(
-    "DATABASE_URL is missing from .env.test.",
+    isContinuousIntegration
+      ? "DATABASE_URL is missing from the CI environment."
+      : "DATABASE_URL is missing from .env.test.",
   );
 }
 
@@ -35,13 +42,14 @@ try {
     new URL(databaseUrl);
 
   databaseName =
-    parsedDatabaseUrl.pathname.replace(
-      /^\//,
-      "",
-    );
+    parsedDatabaseUrl.pathname
+      .replace(/^\//, "")
+      .split("?")[0];
 } catch {
   throw new Error(
-    "DATABASE_URL in .env.test is invalid.",
+    isContinuousIntegration
+      ? "DATABASE_URL in the CI environment is invalid."
+      : "DATABASE_URL in .env.test is invalid.",
   );
 }
 
