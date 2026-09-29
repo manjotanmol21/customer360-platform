@@ -22,6 +22,10 @@ import {
   apiRateLimiter,
 } from "./middleware/rate-limit.middleware.js";
 
+import {
+  requestObservabilityMiddleware,
+} from "./middleware/request-observability.middleware.js";
+
 import authRoutes from "./routes/auth.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
 import healthRoutes from "./routes/health.routes.js";
@@ -29,6 +33,10 @@ import healthRoutes from "./routes/health.routes.js";
 const app = express();
 
 app.disable("x-powered-by");
+
+app.use(
+  requestObservabilityMiddleware,
+);
 
 app.use(
   helmet({
