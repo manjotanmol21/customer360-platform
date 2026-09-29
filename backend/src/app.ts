@@ -1,7 +1,4 @@
-import express, {
-  type Request,
-  type Response,
-} from "express";
+import express from "express";
 
 import helmet from "helmet";
 
@@ -27,6 +24,7 @@ import {
 
 import authRoutes from "./routes/auth.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
+import healthRoutes from "./routes/health.routes.js";
 
 const app = express();
 
@@ -54,18 +52,9 @@ app.use(
   }),
 );
 
-app.get(
+app.use(
   "/api/health",
-  (
-    req: Request,
-    res: Response,
-  ) => {
-    res.status(200).json({
-      status: "ok",
-      message:
-        "Customer360 API is running",
-    });
-  },
+  healthRoutes,
 );
 
 app.use(
