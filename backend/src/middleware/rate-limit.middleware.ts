@@ -18,7 +18,12 @@ export const apiRateLimiter =
     legacyHeaders: false,
 
     skip: (req) => {
-      return req.path === "/health";
+      return (
+        req.path === "/health" ||
+        req.path.startsWith(
+          "/health/",
+        )
+      );
     },
 
     message: {
