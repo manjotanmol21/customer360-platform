@@ -5,10 +5,37 @@ import {
   AUTH_SESSION_EXPIRED_EVENT,
 } from "../constants/auth.constants";
 
+const configuredApiBaseUrl =
+  import.meta.env
+    .VITE_API_BASE_URL
+    ?.trim();
+
+const developmentApiBaseUrl =
+  "http://localhost:3000/api";
+
+const apiBaseUrl =
+  configuredApiBaseUrl ||
+  (
+    import.meta.env.DEV
+      ? developmentApiBaseUrl
+      : ""
+  );
+
+if (!apiBaseUrl) {
+  throw new Error(
+    "VITE_API_BASE_URL is required in production.",
+  );
+}
+
+const normalizedApiBaseUrl =
+  apiBaseUrl.replace(
+    /\/+$/,
+    "",
+  );
+
 const apiClient = axios.create({
   baseURL:
-    import.meta.env.VITE_API_BASE_URL ??
-    "http://localhost:3000/api",
+    normalizedApiBaseUrl,
 
   headers: {
     "Content-Type": "application/json",

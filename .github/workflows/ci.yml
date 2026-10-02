@@ -71,14 +71,11 @@ jobs:
       - name: Lint backend
         run: npm run lint
 
-      - name: Generate Prisma client
-        run: npx prisma generate
-
       - name: Apply database migrations
-        run: npx prisma migrate deploy
+        run: npm run db:migrate:deploy
 
-      - name: Build backend
-        run: npm run build
+      - name: Build backend for production
+        run: npm run build:production
 
       - name: Run tests with coverage
         run: npm run test:coverage
@@ -100,6 +97,9 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+
+    env:
+      VITE_API_BASE_URL: https://api.example.com/api
 
     steps:
       - name: Check out repository
