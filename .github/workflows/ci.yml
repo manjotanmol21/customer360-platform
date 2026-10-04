@@ -46,6 +46,7 @@ jobs:
       NODE_ENV: test
       PORT: 3000
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/customer360_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/customer360_test
       JWT_SECRET: customer360_ci_test_secret_at_least_32_characters
       JWT_EXPIRES_IN: 15m
       CORS_ORIGINS: http://localhost:5173
