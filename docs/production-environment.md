@@ -28,7 +28,7 @@ Neon PostgreSQL
 | Service | `customer360-platform` |
 | Region | Singapore |
 | Public URL | `https://customer360-platform-2a9p.onrender.com` |
-| Deployment branch | `feature/backend-cloud-deployment` |
+| Deployment branch | `master` |
 | Root directory | `backend` |
 | Node version | `>=24 <25` |
 | Health-check path | `/api/health/live` |
@@ -132,19 +132,17 @@ an idle period may take longer while the service starts.
 This deployment is intended for portfolio demonstration and learning rather
 than a production workload with availability guarantees.
 
-## Deployment branch transition
+## Deployment branch
 
-The Render service initially deploys from:
-
-```text
-feature/backend-cloud-deployment
-```
-
-After this change is merged, the Render deployment branch must be changed to:
+The Render service deploys from the protected default branch:
 
 ```text
 master
 ```
 
-The feature branch must not be deleted until the master deployment succeeds
-and its health endpoints pass.
+The initial deployment was validated from
+`feature/backend-cloud-deployment`. After pull request #37 was merged, Render
+was changed to deploy commit `3c55cbd` from `master`.
+
+The master deployment passed the general health, liveness, readiness and
+request-correlation smoke tests.
