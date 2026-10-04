@@ -70,7 +70,8 @@ requires a specific listening port.
 |---|---|---|
 | `NODE_ENV` | Yes | Use `production` in the hosted environment |
 | `PORT` | Platform-dependent | HTTP listening port |
-| `DATABASE_URL` | Yes | Managed PostgreSQL connection string |
+| `DATABASE_URL` | Yes | Pooled managed PostgreSQL connection used by the running API |
+| `DIRECT_URL` | Yes | Direct managed PostgreSQL connection used by Prisma migrations |
 | `JWT_SECRET` | Yes | Random secret containing at least 32 characters |
 | `JWT_EXPIRES_IN` | Yes | Access-token lifetime, such as `15m` |
 | `CORS_ORIGINS` | Yes | Comma-separated allowed frontend origins |
