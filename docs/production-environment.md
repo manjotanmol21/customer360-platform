@@ -9,11 +9,15 @@ be added to this document or committed to Git.
 ## Architecture
 
 ```text
-Client
+Browser
   |
   | HTTPS
   v
-Render Web Service
+Render Static Site (React)
+  |
+  | HTTPS API requests
+  v
+Render Web Service (Express)
   |
   | pooled TLS PostgreSQL connection
   v
@@ -92,17 +96,48 @@ The backend service requires:
 
 Render supplies `PORT`; it is not manually configured.
 
-## Temporary CORS configuration
+## Frontend service
 
-Until the frontend is deployed, the backend permits only the deliberately
-non-routable placeholder origin:
+| Setting | Value |
+|---|---|
+| Provider | Render |
+| Service | `customer360-frontend` |
+| Public URL | `https://customer360-frontend-v31t.onrender.com` |
+| Deployment branch | `master` after the deployment PR is merged |
+| Initial validation branch | `feature/frontend-cloud-deployment` |
+| Root directory | `frontend` |
+| Node version | `>=24 <25` |
+| Build command | `npm install; npm run build` |
+| Publish directory | `dist` |
+| Auto-deploy | Enabled |
+
+The static-site build receives:
 
 ```text
-https://customer360.invalid
+VITE_API_BASE_URL=https://customer360-platform-2a9p.onrender.com/api
 ```
 
-The placeholder must be replaced by the deployed frontend origin during the
-frontend deployment.
+The value is embedded into the generated JavaScript during the Vite build.
+It is public configuration and must never contain a secret.
+
+React Router navigation is supported by this Render rewrite:
+
+```text
+Source:      /*
+Destination: /index.html
+Action:      Rewrite
+```
+
+## Production CORS configuration
+
+The backend allows the deployed frontend origin:
+
+```text
+https://customer360-frontend-v31t.onrender.com
+```
+
+The origin is stored in the backend Render service as `CORS_ORIGINS`.
+The value does not include a trailing slash.
 
 ## Verified endpoints
 
@@ -123,6 +158,13 @@ Production validation also confirmed:
 - request correlation through `X-Request-ID`
 - rejection of unapproved CORS origins
 - structured request logging
+- frontend home-page delivery
+- React Router direct-route rewriting
+- production frontend-to-backend CORS access
+- authenticated admin login
+- customer create, refresh, update and delete operations
+- persisted customer data in Neon PostgreSQL
+- zero frontend npm audit findings
 
 ## Free-tier operational behaviour
 
