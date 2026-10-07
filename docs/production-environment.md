@@ -103,7 +103,7 @@ Render supplies `PORT`; it is not manually configured.
 | Provider | Render |
 | Service | `customer360-frontend` |
 | Public URL | `https://customer360-frontend-v31t.onrender.com` |
-| Deployment branch | `master` after the deployment PR is merged |
+| Deployment branch | `master` |
 | Initial validation branch | `feature/frontend-cloud-deployment` |
 | Root directory | `frontend` |
 | Node version | `>=24 <25` |
@@ -165,6 +165,59 @@ Production validation also confirmed:
 - customer create, refresh, update and delete operations
 - persisted customer data in Neon PostgreSQL
 - zero frontend npm audit findings
+
+## Automated production smoke testing
+
+Customer360 includes a zero-dependency Node.js production smoke-test script:
+
+```text
+scripts/production-smoke.mjs
+```
+
+The script uses the native Node.js `fetch` API and validates:
+
+- frontend home-page delivery
+- React Router direct navigation to `/login`
+- backend general health and no-store caching
+- backend liveness
+- database readiness
+- the exact production CORS origin
+- request correlation through `X-Request-ID`
+- Helmet security headers and removal of `X-Powered-By`
+- rejection of an unapproved CORS origin
+- authentication protection on `/api/customers`
+- modern rate-limit headers
+- consistent JSON handling for unknown API routes
+
+The retry policy allows the smoke test to tolerate a Render free-tier cold
+start. HTTP 5xx responses and temporary network failures are retried before
+the deployment is considered unhealthy.
+
+Run the test locally from the repository root:
+
+```powershell
+node scripts\production-smoke.mjs
+```
+
+The script contains non-secret production URLs by default. They can be
+overridden with `FRONTEND_URL` and `BACKEND_URL` environment variables.
+
+The manual GitHub Actions workflow is stored at:
+
+```text
+.github/workflows/production-smoke.yml
+```
+
+After a production deployment finishes, run it from GitHub:
+
+1. Open the repository's **Actions** tab.
+2. Select **Customer360 Production Smoke Test**.
+3. Select **Run workflow**.
+4. Run the workflow from `master`.
+5. Confirm that all production smoke tests pass.
+
+The workflow is manual so that it runs after Render finishes deploying,
+rather than racing the asynchronous Render deployment.
 
 ## Free-tier operational behaviour
 
