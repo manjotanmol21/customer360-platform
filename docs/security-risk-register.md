@@ -13,7 +13,8 @@ changes.
 | Status | Temporarily accepted |
 | Severity reported by npm | High |
 | Identified | 2026-09-28 |
-| Review date | 2026-10-12 |
+| Last reviewed | 2026-10-07 |
+| Next review date | 2026-10-21 |
 | Owner | Repository maintainer |
 | Affected component | Backend Prisma tooling |
 | Direct application exposure | Low |
@@ -25,8 +26,8 @@ changes.
 
 #### Dependency paths
 
-- `prisma@7.9.1 -> @prisma/config@7.9.1 -> deepmerge-ts@7.1.5`
-- `prisma@7.9.1 -> mysql2@3.15.3`
+- `prisma@7.10.0 -> @prisma/config@7.10.0 -> deepmerge-ts@7.1.5`
+- `prisma@7.10.0 -> mysql2@3.15.3`
 
 #### Risk analysis
 
@@ -73,10 +74,32 @@ The following remediations were rejected:
 - Production secrets are not stored in the repository.
 - Forced npm audit remediation is prohibited.
 
+#### Review outcome: 2026-10-07
+
+The backend dependency tree was reviewed and the following supported updates
+were applied:
+
+- `@prisma/adapter-pg`, `@prisma/client`, and `prisma` were aligned on
+  version `7.10.0`.
+- `proxy-addr` was updated from `2.0.7` to `2.0.8`, resolving the reported
+  critical IP-spoofing vulnerability.
+- `source-map-js` was updated from `1.2.1` to `1.2.2`, resolving the reported
+  event-loop denial-of-service vulnerability.
+
+The remaining npm audit output reports four high-severity findings through the
+Prisma CLI dependency paths documented above. npm continues to propose a
+breaking downgrade to Prisma 6, which is not an acceptable remediation.
+
+Validation after the supported updates completed successfully:
+
+- Prisma schema validation and client generation
+- backend lint and TypeScript compilation
+- all 26 backend integration tests
+
 #### Resolution criteria
 
 This risk can be closed when a supported Prisma 7 release, or a later
 compatible stable release, replaces the affected transitive dependencies with
 patched versions.
 
-The dependency status must be reviewed on or before the review date.
+The dependency status must be reviewed on or before the next review date.
