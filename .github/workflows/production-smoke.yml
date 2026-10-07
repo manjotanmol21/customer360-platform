@@ -1,0 +1,36 @@
+name: Customer360 Production Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: customer360-production-smoke
+  cancel-in-progress: true
+
+jobs:
+  production-smoke:
+    name: Verify deployed frontend and backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      FRONTEND_URL: https://customer360-frontend-v31t.onrender.com
+      BACKEND_URL: https://customer360-platform-2a9p.onrender.com
+      SMOKE_MAX_ATTEMPTS: "8"
+      SMOKE_TIMEOUT_MS: "20000"
+      SMOKE_RETRY_DELAY_MS: "10000"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Run production smoke tests
+        run: node scripts/production-smoke.mjs
