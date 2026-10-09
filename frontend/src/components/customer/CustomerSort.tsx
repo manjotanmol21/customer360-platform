@@ -13,15 +13,15 @@ const options: {
   value: CustomerSortValue;
 }[] = [
   {
-    label: "Name",
+    label: "Name A-Z",
     value: "name",
   },
   {
-    label: "Company",
+    label: "Company A-Z",
     value: "company",
   },
   {
-    label: "Created Date",
+    label: "Newest first",
     value: "created",
   },
 ];

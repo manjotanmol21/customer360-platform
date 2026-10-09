@@ -18,7 +18,11 @@ export default function CustomersPage() {
   const { hasRole } = useAuth();
 
   const {
+    customers,
+    pagination,
+
     isLoading,
+    isFetching,
     isError,
     refetch,
 
@@ -33,14 +37,10 @@ export default function CustomersPage() {
 
     currentPage,
     setCurrentPage,
-
-    sortedCustomers,
-    paginatedCustomers,
-    totalPages,
   } = useCustomers();
 
   const hasCustomers =
-    sortedCustomers.length > 0;
+    customers.length > 0;
 
   const isAdmin =
     hasRole("ADMIN");
@@ -67,6 +67,7 @@ export default function CustomersPage() {
       return (
         <CustomerEmptyState
           searchTerm={searchTerm}
+          statusFilter={statusFilter}
         />
       );
     }
@@ -76,25 +77,37 @@ export default function CustomersPage() {
         <div className="mb-4 flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>
             Showing{" "}
-            {paginatedCustomers.length} of{" "}
-            {sortedCustomers.length} customers
+            {customers.length} of{" "}
+            {pagination.totalItems} customers
           </p>
 
-          <p>
-            Page {currentPage} of{" "}
-            {totalPages}
-          </p>
+          <div className="flex items-center gap-3">
+            {isFetching && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="text-blue-700"
+              >
+                Updating results...
+              </span>
+            )}
+
+            <p>
+              Page {currentPage} of{" "}
+              {pagination.totalPages}
+            </p>
+          </div>
         </div>
 
         <CustomerTable
-          customers={
-            paginatedCustomers
-          }
+          customers={customers}
         />
 
         <CustomerPagination
           currentPage={currentPage}
-          totalPages={totalPages}
+          totalPages={
+            pagination.totalPages
+          }
           onPageChange={setCurrentPage}
         />
       </>

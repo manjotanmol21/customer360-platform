@@ -21,7 +21,23 @@ export default function CustomerSearch({
           className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"
           aria-hidden="true"
         >
-          🔍
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="8"
+            />
+
+            <path d="m21 21-4.35-4.35" />
+          </svg>
         </span>
 
         <input
@@ -31,7 +47,7 @@ export default function CustomerSearch({
           onChange={(event) => {
             onChange(event.target.value);
           }}
-          placeholder="Search by name, company, email, phone or status..."
+          placeholder="Search by name, company, email or phone..."
           className="h-12 w-full rounded-lg border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
       </div>
