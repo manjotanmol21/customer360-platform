@@ -5,19 +5,16 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  customerQueryKeys,
+} from "../features/customers/customerQueryKeys";
+
+import {
   createCustomer,
   deleteCustomer,
   getCustomerById,
   updateCustomer,
   type CustomerInput,
 } from "../services/customer.service";
-
-export const customerQueryKeys = {
-  all: ["customers"] as const,
-
-  detail: (customerId: number) =>
-    ["customers", customerId] as const,
-};
 
 export function useCustomer(
   customerId: number | undefined,
@@ -28,9 +25,10 @@ export function useCustomer(
     customerId > 0;
 
   return useQuery({
-    queryKey: customerQueryKeys.detail(
-      customerId ?? 0,
-    ),
+    queryKey:
+      customerQueryKeys.detail(
+        customerId ?? 0,
+      ),
 
     queryFn: () =>
       getCustomerById(
@@ -57,7 +55,7 @@ export function useCreateCustomer() {
 
       await queryClient.invalidateQueries({
         queryKey:
-          customerQueryKeys.all,
+          customerQueryKeys.lists(),
       });
     },
   });
@@ -91,7 +89,7 @@ export function useUpdateCustomer() {
 
       await queryClient.invalidateQueries({
         queryKey:
-          customerQueryKeys.all,
+          customerQueryKeys.lists(),
       });
     },
   });
@@ -116,7 +114,7 @@ export function useDeleteCustomer() {
 
       await queryClient.invalidateQueries({
         queryKey:
-          customerQueryKeys.all,
+          customerQueryKeys.lists(),
       });
     },
   });

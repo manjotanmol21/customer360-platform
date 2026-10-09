@@ -2,6 +2,8 @@ import apiClient from "../api/apiClient";
 
 import type {
   Customer,
+  CustomerPage,
+  CustomerQuery,
   CustomerStatus,
 } from "../features/customers/types/customer";
 
@@ -19,14 +21,29 @@ type ApiResponse<T> = {
   data: T;
 };
 
-export const getCustomers = async (): Promise<
-  Customer[]
-> => {
-  const response = await apiClient.get<
-    ApiResponse<Customer[]>
-  >("/customers");
+type CustomerListApiResponse =
+  ApiResponse<Customer[]> & {
+    pagination:
+      CustomerPage["pagination"];
+  };
 
-  return response.data.data;
+export const getCustomers = async (
+  query: CustomerQuery,
+): Promise<CustomerPage> => {
+  const response = await apiClient.get<
+    CustomerListApiResponse
+  >(
+    "/customers",
+    {
+      params: query,
+    },
+  );
+
+  return {
+    customers: response.data.data,
+    pagination:
+      response.data.pagination,
+  };
 };
 
 export const getCustomerById = async (

@@ -1,30 +1,73 @@
-import { useQuery } from "@tanstack/react-query";
 import {
+  keepPreviousData,
+  useQuery,
+} from "@tanstack/react-query";
+
+import {
+  useEffect,
   useMemo,
   useState,
 } from "react";
 
-import type { CustomerSortValue } from "../components/customer/CustomerSort";
-import type { CustomerStatusFilterValue } from "../components/customer/CustomerStatusFilter";
+import type {
+  CustomerSortValue,
+} from "../components/customer/CustomerSort";
 
-import { getCustomers as fetchCustomers } from "../services/customer.service";
+import type {
+  CustomerStatusFilterValue,
+} from "../components/customer/CustomerStatusFilter";
 
-const PAGE_SIZE = 2;
+import {
+  customerQueryKeys,
+} from "../features/customers/customerQueryKeys";
+
+import type {
+  CustomerQuery,
+} from "../features/customers/types/customer";
+
+import {
+  getCustomers,
+} from "../services/customer.service";
+
+const PAGE_SIZE = 10;
+
+const SEARCH_DEBOUNCE_MS = 350;
+
+const getSortQuery = (
+  sortBy: CustomerSortValue,
+): Pick<
+  CustomerQuery,
+  "sortBy" | "sortOrder"
+> => {
+  switch (sortBy) {
+    case "company":
+      return {
+        sortBy: "company",
+        sortOrder: "asc",
+      };
+
+    case "created":
+      return {
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      };
+
+    default:
+      return {
+        sortBy: "firstName",
+        sortOrder: "asc",
+      };
+  }
+};
 
 export function useCustomers() {
-  const {
-    data: customers = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["customers"],
-    queryFn: fetchCustomers,
-  });
-
   const [searchTerm, setSearchTermState] =
     useState("");
+
+  const [
+    debouncedSearchTerm,
+    setDebouncedSearchTerm,
+  ] = useState("");
 
   const [
     statusFilter,
@@ -38,149 +81,123 @@ export function useCustomers() {
     useState<CustomerSortValue>("name");
 
   const [
-    requestedPage,
-    setRequestedPage,
+    currentPage,
+    setCurrentPageState,
   ] = useState(1);
 
-  const normalizedSearch =
-    searchTerm.trim().toLowerCase();
-
-  const filteredCustomers = useMemo(() => {
-    return customers.filter((customer) => {
-      const fullName =
-        `${customer.firstName} ${customer.lastName}`.toLowerCase();
-
-      const matchesSearch =
-        fullName.includes(
-          normalizedSearch,
-        ) ||
-        customer.company
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        customer.email
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        customer.phone
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        customer.status
-          .toLowerCase()
-          .includes(normalizedSearch);
-
-      const matchesStatus =
-        statusFilter === "All" ||
-        customer.status === statusFilter;
-
-      return (
-        matchesSearch &&
-        matchesStatus
-      );
-    });
-  }, [
-    customers,
-    normalizedSearch,
-    statusFilter,
-  ]);
-
-  const sortedCustomers = useMemo(() => {
-    const copy = [...filteredCustomers];
-
-    switch (sortBy) {
-      case "company":
-        copy.sort((a, b) =>
-          a.company.localeCompare(
-            b.company,
-          ),
+  useEffect(() => {
+    const timerId = window.setTimeout(
+      () => {
+        setDebouncedSearchTerm(
+          searchTerm.trim(),
         );
-        break;
+      },
+      SEARCH_DEBOUNCE_MS,
+    );
 
-      case "created":
-        copy.sort((a, b) =>
-          a.createdAt.localeCompare(
-            b.createdAt,
-          ),
-        );
-        break;
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [searchTerm]);
 
-      default:
-        copy.sort((a, b) =>
-          `${a.firstName} ${a.lastName}`.localeCompare(
-            `${b.firstName} ${b.lastName}`,
-          ),
-        );
-    }
+  const query =
+    useMemo<CustomerQuery>(() => {
+      const sortQuery =
+        getSortQuery(sortBy);
 
-    return copy;
-  }, [
-    filteredCustomers,
-    sortBy,
-  ]);
-
-  const totalPages = Math.ceil(
-    sortedCustomers.length / PAGE_SIZE,
-  );
-
-  const currentPage = Math.min(
-    requestedPage,
-    Math.max(totalPages, 1),
-  );
-
-  const paginatedCustomers =
-    useMemo(() => {
-      const startIndex =
-        (currentPage - 1) *
-        PAGE_SIZE;
-
-      const endIndex =
-        startIndex + PAGE_SIZE;
-
-      return sortedCustomers.slice(
-        startIndex,
-        endIndex,
-      );
+      return {
+        page: currentPage,
+        pageSize: PAGE_SIZE,
+        search:
+          debouncedSearchTerm ||
+          undefined,
+        status:
+          statusFilter === "All"
+            ? undefined
+            : statusFilter,
+        ...sortQuery,
+      };
     }, [
       currentPage,
-      sortedCustomers,
+      debouncedSearchTerm,
+      sortBy,
+      statusFilter,
     ]);
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey:
+      customerQueryKeys.list(query),
+
+    queryFn: () =>
+      getCustomers(query),
+
+    placeholderData:
+      keepPreviousData,
+  });
+
+  const customers =
+    data?.customers ?? [];
+
+  const pagination =
+    data?.pagination ?? {
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      totalItems: 0,
+      totalPages: 0,
+    };
+
 
   function setSearchTerm(
     value: string,
   ): void {
     setSearchTermState(value);
-    setRequestedPage(1);
+    setCurrentPageState(1);
   }
 
   function setStatusFilter(
     value: CustomerStatusFilterValue,
   ): void {
     setStatusFilterState(value);
-    setRequestedPage(1);
+    setCurrentPageState(1);
   }
 
   function setSortBy(
     value: CustomerSortValue,
   ): void {
     setSortByState(value);
-    setRequestedPage(1);
+    setCurrentPageState(1);
   }
 
   function setCurrentPage(
     page: number,
   ): void {
     const lastAvailablePage =
-      Math.max(totalPages, 1);
+      Math.max(
+        pagination.totalPages,
+        1,
+      );
 
     const safePage = Math.min(
       Math.max(page, 1),
       lastAvailablePage,
     );
 
-    setRequestedPage(safePage);
+    setCurrentPageState(safePage);
   }
 
   return {
     customers,
+    pagination,
+
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
@@ -197,11 +214,6 @@ export function useCustomers() {
     currentPage,
     setCurrentPage,
 
-    filteredCustomers,
-    sortedCustomers,
-    paginatedCustomers,
-
-    totalPages,
     pageSize: PAGE_SIZE,
   };
 }
