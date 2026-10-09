@@ -1,7 +1,6 @@
-export type CustomerSortValue =
-  | "name"
-  | "company"
-  | "created";
+import type {
+  CustomerSortValue,
+} from "../../features/customers/types/customer";
 
 interface CustomerSortProps {
   value: CustomerSortValue;

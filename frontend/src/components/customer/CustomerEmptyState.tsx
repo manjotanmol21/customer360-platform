@@ -1,6 +1,6 @@
 import type {
   CustomerStatusFilterValue,
-} from "./CustomerStatusFilter";
+} from "../../features/customers/types/customer";
 
 interface CustomerEmptyStateProps {
   searchTerm: string;

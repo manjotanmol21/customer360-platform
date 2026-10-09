@@ -3,6 +3,15 @@ export type CustomerStatus =
   | "Inactive"
   | "Pending";
 
+export type CustomerStatusFilterValue =
+  | "All"
+  | CustomerStatus;
+
+export type CustomerSortValue =
+  | "name"
+  | "company"
+  | "created";
+
 export type CustomerSortField =
   | "id"
   | "firstName"

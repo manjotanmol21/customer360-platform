@@ -9,20 +9,24 @@ import {
   useState,
 } from "react";
 
-import type {
-  CustomerSortValue,
-} from "../components/customer/CustomerSort";
-
-import type {
-  CustomerStatusFilterValue,
-} from "../components/customer/CustomerStatusFilter";
+import {
+  useSearchParams,
+} from "react-router-dom";
 
 import {
   customerQueryKeys,
 } from "../features/customers/customerQueryKeys";
 
+import {
+  createCustomerSearchParams,
+  readCustomerSearchParams,
+  type CustomerUrlState,
+} from "../features/customers/customerSearchParams";
+
 import type {
   CustomerQuery,
+  CustomerSortValue,
+  CustomerStatusFilterValue,
 } from "../features/customers/types/customer";
 
 import {
@@ -61,29 +65,58 @@ const getSortQuery = (
 };
 
 export function useCustomers() {
-  const [searchTerm, setSearchTermState] =
-    useState("");
+  const [
+    searchParams,
+    setSearchParams,
+  ] = useSearchParams();
+
+  const urlState =
+    useMemo(
+      () =>
+        readCustomerSearchParams(
+          searchParams,
+        ),
+      [searchParams],
+    );
+
+  const {
+    currentPage,
+    searchTerm,
+    statusFilter,
+    sortBy,
+  } = urlState;
 
   const [
     debouncedSearchTerm,
     setDebouncedSearchTerm,
-  ] = useState("");
+  ] = useState(searchTerm.trim());
 
-  const [
-    statusFilter,
-    setStatusFilterState,
-  ] =
-    useState<CustomerStatusFilterValue>(
-      "All",
+  const canonicalSearchParams =
+    useMemo(
+      () =>
+        createCustomerSearchParams(
+          urlState,
+        ),
+      [urlState],
     );
 
-  const [sortBy, setSortByState] =
-    useState<CustomerSortValue>("name");
-
-  const [
-    currentPage,
-    setCurrentPageState,
-  ] = useState(1);
+  useEffect(() => {
+    if (
+      searchParams.toString() !==
+      canonicalSearchParams.toString()
+    ) {
+      setSearchParams(
+        canonicalSearchParams,
+        {
+          replace: true,
+        },
+      );
+    }
+  }, [
+    canonicalSearchParams,
+    searchParams,
+    setSearchParams,
+  ]);
 
   useEffect(() => {
     const timerId = window.setTimeout(
@@ -153,26 +186,51 @@ export function useCustomers() {
       totalPages: 0,
     };
 
+  function writeUrlState(
+    nextState: CustomerUrlState,
+    replace = false,
+  ): void {
+    setSearchParams(
+      createCustomerSearchParams(
+        nextState,
+      ),
+      {
+        replace,
+      },
+    );
+  }
 
   function setSearchTerm(
     value: string,
   ): void {
-    setSearchTermState(value);
-    setCurrentPageState(1);
+    writeUrlState(
+      {
+        ...urlState,
+        currentPage: 1,
+        searchTerm: value,
+      },
+      true,
+    );
   }
 
   function setStatusFilter(
     value: CustomerStatusFilterValue,
   ): void {
-    setStatusFilterState(value);
-    setCurrentPageState(1);
+    writeUrlState({
+      ...urlState,
+      currentPage: 1,
+      statusFilter: value,
+    });
   }
 
   function setSortBy(
     value: CustomerSortValue,
   ): void {
-    setSortByState(value);
-    setCurrentPageState(1);
+    writeUrlState({
+      ...urlState,
+      currentPage: 1,
+      sortBy: value,
+    });
   }
 
   function setCurrentPage(
@@ -184,12 +242,16 @@ export function useCustomers() {
         1,
       );
 
-    const safePage = Math.min(
-      Math.max(page, 1),
-      lastAvailablePage,
-    );
+    const safePage =
+      Math.min(
+        Math.max(page, 1),
+        lastAvailablePage,
+      );
 
-    setCurrentPageState(safePage);
+    writeUrlState({
+      ...urlState,
+      currentPage: safePage,
+    });
   }
 
   return {
