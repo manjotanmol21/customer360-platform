@@ -9,6 +9,10 @@ import {
 } from "../errors/app.error.js";
 
 import {
+  customerQuerySchema,
+} from "../schemas/customer.schema.js";
+
+import {
   createCustomer,
   deleteCustomer,
   getAllCustomers,
@@ -45,11 +49,31 @@ export const getCustomers = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const customers = await getAllCustomers();
+  const queryResult =
+    customerQuerySchema.safeParse(
+      req.query,
+    );
+
+  if (!queryResult.success) {
+    const message =
+      queryResult.error.issues
+        .map((issue) => issue.message)
+        .join(", ");
+
+    throw new BadRequestError(message);
+  }
+
+  const {
+    customers,
+    pagination,
+  } = await getAllCustomers(
+    queryResult.data,
+  );
 
   res.status(200).json({
     success: true,
     data: customers,
+    pagination,
   });
 };
 

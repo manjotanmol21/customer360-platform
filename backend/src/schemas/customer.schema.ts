@@ -6,6 +6,76 @@ export const customerStatusSchema = z.enum([
   "Inactive",
 ]);
 
+export const customerSortFieldSchema = z.enum([
+  "id",
+  "firstName",
+  "lastName",
+  "email",
+  "company",
+  "status",
+  "createdAt",
+]);
+
+export const customerSortOrderSchema = z.enum([
+  "asc",
+  "desc",
+]);
+
+export const customerQuerySchema = z.object({
+  page: z.coerce
+    .number({
+      error:
+        "Page must be a positive integer",
+    })
+    .int(
+      "Page must be a positive integer",
+    )
+    .min(
+      1,
+      "Page must be a positive integer",
+    )
+    .default(1),
+
+  pageSize: z.coerce
+    .number({
+      error:
+        "Page size must be an integer between 1 and 100",
+    })
+    .int(
+      "Page size must be an integer between 1 and 100",
+    )
+    .min(
+      1,
+      "Page size must be an integer between 1 and 100",
+    )
+    .max(
+      100,
+      "Page size must be an integer between 1 and 100",
+    )
+    .default(10),
+
+  search: z
+    .string()
+    .trim()
+    .max(
+      100,
+      "Search must be 100 characters or fewer",
+    )
+    .optional()
+    .transform((value) => {
+      return value || undefined;
+    }),
+
+  status:
+    customerStatusSchema.optional(),
+
+  sortBy:
+    customerSortFieldSchema.default("id"),
+
+  sortOrder:
+    customerSortOrderSchema.default("asc"),
+});
+
 export const customerBodySchema = z.object({
   firstName: z
     .string()
@@ -54,6 +124,9 @@ export const customerBodySchema = z.object({
 
   status: customerStatusSchema,
 });
+
+export type CustomerQueryInput =
+  z.infer<typeof customerQuerySchema>;
 
 export type CustomerBodyInput =
   z.infer<typeof customerBodySchema>;

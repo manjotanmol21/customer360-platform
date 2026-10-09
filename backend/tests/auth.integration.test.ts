@@ -162,6 +162,12 @@ describe("authentication middleware", () => {
     expect(response.body).toEqual({
       success: true,
       data: [],
+      pagination: {
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+      },
     });
   });
 });

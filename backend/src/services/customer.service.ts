@@ -11,6 +11,19 @@ export type CustomerStatus =
   | "Inactive"
   | "Pending";
 
+export type CustomerSortField =
+  | "id"
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "company"
+  | "status"
+  | "createdAt";
+
+export type CustomerSortOrder =
+  | "asc"
+  | "desc";
+
 export type Customer = {
   id: number;
   firstName: string;
@@ -20,6 +33,27 @@ export type Customer = {
   company: string;
   status: CustomerStatus;
   createdAt: string;
+};
+
+export type CustomerQuery = {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: CustomerStatus;
+  sortBy: CustomerSortField;
+  sortOrder: CustomerSortOrder;
+};
+
+export type CustomerPagination = {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type CustomerPage = {
+  customers: Customer[];
+  pagination: CustomerPagination;
 };
 
 export type CreateCustomerInput = {
@@ -57,8 +91,10 @@ export const isCustomerStatus = (
   );
 };
 
-export const getAllCustomers = async (): Promise<Customer[]> => {
-  return findAllCustomers();
+export const getAllCustomers = async (
+  query: CustomerQuery,
+): Promise<CustomerPage> => {
+  return findAllCustomers(query);
 };
 
 export const getCustomerById = async (

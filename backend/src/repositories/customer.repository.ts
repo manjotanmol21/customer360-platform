@@ -1,12 +1,16 @@
-import { prisma } from "../lib/prisma.js";
+import { ConflictError } from "../errors/app.error.js";
+
 import {
   CustomerStatus as PrismaCustomerStatus,
 } from "../generated/prisma/enums.js";
-import { ConflictError } from "../errors/app.error.js";
+
+import { prisma } from "../lib/prisma.js";
 
 import type {
   CreateCustomerInput,
   Customer,
+  CustomerPage,
+  CustomerQuery,
   CustomerStatus,
   UpdateCustomerInput,
 } from "../services/customer.service.js";
@@ -60,7 +64,8 @@ const mapCustomer = (
     email: customer.email,
     phone: customer.phone,
     company: customer.company,
-    status: fromPrismaStatus(customer.status),
+    status:
+      fromPrismaStatus(customer.status),
     createdAt: customer.createdAt
       .toISOString()
       .slice(0, 10),
@@ -78,24 +83,157 @@ const isPrismaUniqueConstraintError = (
   );
 };
 
-export const findAllCustomers = async (): Promise<Customer[]> => {
-  const customers = await prisma.customer.findMany({
-    orderBy: {
-      id: "asc",
-    },
-  });
+const buildCustomerWhere = (
+  query: CustomerQuery,
+) => {
+  return {
+    ...(query.status
+      ? {
+          status:
+            toPrismaStatus(query.status),
+        }
+      : {}),
 
-  return customers.map(mapCustomer);
+    ...(query.search
+      ? {
+          OR: [
+            {
+              firstName: {
+                contains: query.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              lastName: {
+                contains: query.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              email: {
+                contains: query.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              phone: {
+                contains: query.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              company: {
+                contains: query.search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        }
+      : {}),
+  };
+};
+
+const buildCustomerOrderBy = (
+  query: CustomerQuery,
+) => {
+  switch (query.sortBy) {
+    case "id":
+      return {
+        id: query.sortOrder,
+      };
+
+    case "firstName":
+      return {
+        firstName: query.sortOrder,
+      };
+
+    case "lastName":
+      return {
+        lastName: query.sortOrder,
+      };
+
+    case "email":
+      return {
+        email: query.sortOrder,
+      };
+
+    case "company":
+      return {
+        company: query.sortOrder,
+      };
+
+    case "status":
+      return {
+        status: query.sortOrder,
+      };
+
+    case "createdAt":
+      return {
+        createdAt: query.sortOrder,
+      };
+  }
+};
+
+export const findAllCustomers = async (
+  query: CustomerQuery,
+): Promise<CustomerPage> => {
+  const where =
+    buildCustomerWhere(query);
+
+  const orderBy =
+    buildCustomerOrderBy(query);
+
+  const skip =
+    (query.page - 1) * query.pageSize;
+
+  const [
+    totalItems,
+    customers,
+  ] = await prisma.$transaction([
+    prisma.customer.count({
+      where,
+    }),
+
+    prisma.customer.findMany({
+      where,
+      orderBy:
+        query.sortBy === "id"
+          ? [orderBy]
+          : [
+              orderBy,
+              {
+                id: "asc",
+              },
+            ],
+      skip,
+      take: query.pageSize,
+    }),
+  ]);
+
+  return {
+    customers:
+      customers.map(mapCustomer),
+
+    pagination: {
+      page: query.page,
+      pageSize: query.pageSize,
+      totalItems,
+      totalPages: Math.ceil(
+        totalItems / query.pageSize,
+      ),
+    },
+  };
 };
 
 export const findCustomerById = async (
   id: number,
 ): Promise<Customer | undefined> => {
-  const customer = await prisma.customer.findUnique({
-    where: {
-      id,
-    },
-  });
+  const customer =
+    await prisma.customer.findUnique({
+      where: {
+        id,
+      },
+    });
 
   if (!customer) {
     return undefined;
@@ -108,20 +246,26 @@ export const insertCustomer = async (
   input: CreateCustomerInput,
 ): Promise<Customer> => {
   try {
-    const customer = await prisma.customer.create({
-      data: {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        phone: input.phone,
-        company: input.company,
-        status: toPrismaStatus(input.status),
-      },
-    });
+    const customer =
+      await prisma.customer.create({
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          company: input.company,
+          status:
+            toPrismaStatus(input.status),
+        },
+      });
 
     return mapCustomer(customer);
   } catch (error) {
-    if (isPrismaUniqueConstraintError(error)) {
+    if (
+      isPrismaUniqueConstraintError(
+        error,
+      )
+    ) {
       throw new ConflictError(
         "A customer with this email already exists",
       );
@@ -147,23 +291,30 @@ export const modifyCustomer = async (
   }
 
   try {
-    const customer = await prisma.customer.update({
-      where: {
-        id,
-      },
-      data: {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        phone: input.phone,
-        company: input.company,
-        status: toPrismaStatus(input.status),
-      },
-    });
+    const customer =
+      await prisma.customer.update({
+        where: {
+          id,
+        },
+
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          company: input.company,
+          status:
+            toPrismaStatus(input.status),
+        },
+      });
 
     return mapCustomer(customer);
   } catch (error) {
-    if (isPrismaUniqueConstraintError(error)) {
+    if (
+      isPrismaUniqueConstraintError(
+        error,
+      )
+    ) {
       throw new ConflictError(
         "A customer with this email already exists",
       );
